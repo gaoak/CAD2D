@@ -108,6 +108,7 @@ int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi)
     outxml << "        <COMPOSITE>" << "\n";
     //check boundary definition
     findAllBoundaryEdges();
+    std::set<int> allbndEdges = m_allBoundaryEdges;
     //output boundary
     int bndEdgeNumber = 0;
     int bndIDMax = 0;
@@ -117,6 +118,8 @@ int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi)
             for(unsigned int j=0; j<m_boundary[i].size(); j++) {
                 if(m_allBoundaryEdges.find(m_boundary[i][j]) == m_allBoundaryEdges.end()) {
                     std::cout << "warning: in region " << m_name << ", Edge " << m_boundary[i][j] << " should not be a boundary " << std::endl;
+                } else {
+                    allbndEdges.erase(m_boundary[i][j]);
                 }
             }
             outxml << "            <C ID=\""<< bndIDMax << "\"> E[";
@@ -129,6 +132,14 @@ int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi)
     }
     if(bndEdgeNumber!=m_allBoundaryEdges.size()) {
         std::cout << "warning: in region " << m_name << ", boudnary condition incomplete" << std::endl;
+        outxml << "            <C ID=\""<< bndIDMax << "\"> E[";
+        auto it=allbndEdges.begin();
+        outxml << (*it);
+        for(++it; it!=allbndEdges.end(); ++it) {
+            outxml << "," << (*it);
+        }
+        outxml << "] </C>" << "\n";
+        ++bndIDMax;
     }
     std::vector<int> quadComp;
     std::vector<int> trigComp;
@@ -231,14 +242,14 @@ int MeshRegions::defineBoundary(void* edgeFun, int N, int bndID, int Ncurve, dou
         transform(p1, AoA);
 		int id0, id1;
 		if(!pointIsExist(p0, id0) || !pointIsExist(p1, id1)) {
-		    std::cout << "points(" << p0[0] << "," << p0[1] <<  ") not found on boundary " << bndID << std::endl;
+		    std::cout << "warning points(" << p0[0] << "," << p0[1] <<  ") not found on boundary " << bndID << std::endl;
 		}
 		std::set<int> es;
 		es.insert(id0);
 		es.insert(id1);
 		int eId;
 		if(m_edgesIndex.find(es)==m_edgesIndex.end()){
-		    std::cout << "Edge (" << id0 << "---" << id1 <<  ") not found on boundary " << bndID << std::endl;
+		    std::cout << "warning Edge (" << id0 << "---" << id1 <<  ") not found on boundary " << bndID << std::endl;
 		}
 		eId = m_edgesIndex[es];
 		double edgeDirec = 1.;
