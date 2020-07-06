@@ -199,7 +199,7 @@ std::vector<double> RectRegion::EvaluateEdgePtsDerivOneSide(int i, double s)
     return res;
 }
 
-int RectRegion::ptsByBoundaryLayer(bool trimWakeSlope) {
+int RectRegion::ptsByBoundaryLayer(bool trimWakeSlope, MeshType method) {
     // points generation
     //four vertexes + bounday points
     double dx = 2./m_M, dy = 2./m_N;
@@ -211,7 +211,7 @@ int RectRegion::ptsByBoundaryLayer(bool trimWakeSlope) {
     double maxSlopx = 0., maxx = 0.;
     for(int i=0; i<=m_M; ++i) {
         double nf0 = 0., nf1 = 0., nb0 = 0., nb1 = 0., n0 = 0., n1 = 0.;
-        if(i<m_M && i>0) {
+        if(i<m_M && i>0 && method==eBoundaryLayer0) {
             nf0 = edge0[i+1][0] - edge0[i][0];
             nf1 = edge0[i+1][1] - edge0[i][1];
             nb0 = edge0[i][0] - edge0[i-1][0];
@@ -298,8 +298,8 @@ int RectRegion::MeshGen(int M, int N, MeshType method, bool trimWakeSlope)
 {
     m_M = M;
     m_N = N;
-    if(method == eBoundaryLayer0) {
-        ptsByBoundaryLayer(trimWakeSlope);
+    if(method == eBoundaryLayer0 || method == eBoundaryLayer1) {
+        ptsByBoundaryLayer(trimWakeSlope, method);
     }else if(method == eIsoparametric){
         ptsByIsoParametric();
     }else {

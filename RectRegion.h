@@ -11,7 +11,8 @@ enum EdgeType {
 
 enum MeshType {
     eIsoparametric,
-    eBoundaryLayer0,
+    eBoundaryLayer0, //discrete norm
+    eBoundaryLayer1, //continuous norm
     eStraightLine
 };
 
@@ -37,7 +38,7 @@ private:
     int m_edgeAttractMesh;
     double m_attractEps;
     int ptsByIsoParametric();
-    int ptsByBoundaryLayer(bool trimWakeSlope);
+    int ptsByBoundaryLayer(bool trimWakeSlope, MeshType method);
     int ptsByStraightLine();
     std::vector<double> EvaluateEdgePtsDerivOneSide(int i, double s);
 };
