@@ -294,11 +294,10 @@ void MeshRegions::findAllBoundaryEdges() {
 
 void MeshRegions::outOuterRegion(std::string filename, std::vector<std::vector<double>> box, std::vector<double> center, double radius, bool exclude) {
     extractBoundary();
-    std::ofstream outgmsh(filename.c_str());
-    int index = 1, j;
+    int j;
     //find outer edges
     std::vector<std::vector<int>> unSharedPts;
-	if(exclude) {
+    if(exclude) {
         for(int i=0; i<m_unSharedPts.size(); ++i) {
             for(j=0; j<m_unSharedPts[i].size(); ++j) {
                 if(fabs(m_pts[m_unSharedPts[i][j]][0]-center[0]) + fabs(m_pts[m_unSharedPts[i][j]][1]-center[1])<radius) {
@@ -318,6 +317,73 @@ void MeshRegions::outOuterRegion(std::string filename, std::vector<std::vector<d
             }
         }
 	}
+    outGeo(filename, box, unSharedPts);
+}
+
+void MeshRegions::outInnerRegion(std::string filename, std::vector<std::vector<double>> breakpts, std::vector<double> center, double radius) {
+    extractBoundary();
+    //find inner edges
+    std::vector<std::vector<int>> unSharedPtsFront;
+    std::vector<std::vector<int>> unSharedPtsBack;
+    std::vector<int> pts;
+    for(int i=0; i<m_unSharedPts.size(); ++i) {
+        for(int j=0; j<m_unSharedPts[i].size(); ++j) {
+            if(fabs(m_pts[m_unSharedPts[i][j]][0]-center[0]) + fabs(m_pts[m_unSharedPts[i][j]][1]-center[1])<radius) {
+                pts = m_unSharedPts[i];
+                break;
+            }
+        }
+    }
+    //break inner boundary
+    int index0 = -1, index1 = -1;
+    for(int i=0; i<pts.size(); ++i) {
+        if(fabs(m_pts[pts[i]][0]-breakpts[0][0]) + fabs(m_pts[pts[i]][1]-breakpts[0][1])<2.*m_tolerance) {
+            index0 = i;
+        }
+        if(fabs(m_pts[pts[i]][0]-breakpts[1][0]) + fabs(m_pts[pts[i]][1]-breakpts[1][1])<2.*m_tolerance) {
+            index1 = i;
+        }
+    }
+    if(index0 == -1 || index1  == -1 || index0 == index1) {
+        std::cout << "error failed to break inner boundary." << std::endl;
+    }
+    if(index0>index1) {
+        int tmp = index1;
+        index1 = index0;
+        index0 = tmp;
+    }
+    std::vector<int> pts0;
+    std::vector<int> pts1;
+    for(int i=0; i<=index0; ++i) {
+        pts0.push_back(pts[i]);
+    }
+    for(int i=index1; i<pts.size(); ++i) {
+        pts0.push_back(pts[i]);
+    }
+    for(int i=index0; i<=index1; ++i) {
+        pts1.push_back(pts[i]);
+    }
+    if(m_pts[pts[index0+1]][0]>m_pts[pts[index0]][0]) {
+        unSharedPtsBack.push_back(pts1);
+        unSharedPtsFront.push_back(pts0);
+    } else {
+        unSharedPtsBack.push_back(pts0);
+        unSharedPtsFront.push_back(pts1);
+    }
+    //
+    std::string frontname("front_");
+    std::string backname("back_");
+    frontname += filename;
+    backname  += filename;
+    std::vector<std::vector<double>> box;
+    outGeo(frontname, box, unSharedPtsFront);
+    outGeo(backname, box, unSharedPtsBack);
+}
+
+void MeshRegions::outGeo(std::string filename, std::vector<std::vector<double>> box, std::vector<std::vector<int>> unSharedPts) {
+    std::ofstream outgmsh(filename.c_str());
+    int index = 1, j;
+    //find outer edges
     //points
     std::map<int, int> pts;
     for(int i=0; i<unSharedPts.size(); ++i) {

@@ -15,11 +15,13 @@ public:
     int defineBoundary(void* edgeFun, int N, int bndID, int Ncurve = 2, double AoA = 0., int direction = 1);
     int outCOMPO(std::string filename, std::vector<int> comps);
     void outOuterRegion(std::string filename, std::vector<std::vector<double>> box, std::vector<double> center,double radius, bool exclude);
+    void outInnerRegion(std::string filename, std::vector<std::vector<double>> breakpts, std::vector<double> center, double radius);
 private:
     std::map<int, std::vector<int>> m_boundary;
     void findAllBoundaryEdges();
     std::set<int> m_allBoundaryEdges;
     std::vector<int> m_curvedEdges;
     std::vector<std::vector<double>> m_curvedPoints;
+    void outGeo(std::string filename, std::vector<std::vector<double>> box, std::vector<std::vector<int>> unSharedPts);
 };
 #endif
