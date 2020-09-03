@@ -77,7 +77,7 @@ int MeshRegions::outXml(std::string filename)
 int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi)
 {
     std::ofstream outxml(filename.c_str(), std::ofstream::app);
-    int NUMMODES = 2, NUMPOINT = 3;
+    int NUMMODES = 4, NUMPOINT = 5;
     //sort
     sortCellFromQtoT();
     std::vector<int> comps;

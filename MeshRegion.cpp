@@ -121,10 +121,12 @@ int MeshRegion::loadElements(std::ifstream &inxml, int N, char buffer[], std::se
     return 0;
 }
 
-int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
-    double maxcangle = -1E11;
-    int maxindex = -1;
+void MeshRegion::CalculateCosAngle(std::vector<int> pts, std::vector<double> &cangle,
+                                  int & maxc, int & minabs) {
+    double maxcangle = -1E21;
+    double minabscangle = 1E21;
     int n = pts.size();
+    cangle = std::vector<double>(n);
     for(int i=0; i<n; ++i) {
         double xm1 = m_pts[pts[(i+n-1)%n]][0];
         double ym1 = m_pts[pts[(i+n-1)%n]][1];
@@ -136,14 +138,25 @@ int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
         double nmy = (y-ym1)/sqrt((x-xm1)*(x-xm1)+(y-ym1)*(y-ym1));
         double npx = (xp1-x)/sqrt((xp1-x)*(xp1-x)+(yp1-y)*(yp1-y));
         double npy = (yp1-y)/sqrt((xp1-x)*(xp1-x)+(yp1-y)*(yp1-y));
-        double cangle = nmx*npx + nmy*npy;
-        if(cangle>maxcangle) {
-            maxcangle = cangle;
-            maxindex = i;
+        cangle[i] = nmx*npx + nmy*npy;
+        if(cangle[i]>maxcangle) {
+            maxcangle = cangle[i];
+            maxc = i;
+        }
+        if(fabs(cangle[i])<minabscangle) {
+            minabscangle = fabs(cangle[i]);
+            minabs = i;
         }
     }
+}
+
+int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
+    std::vector<double> cangle;
+    int maxindex, minabsindex;
+    CalculateCosAngle(pts, cangle, maxindex, minabsindex);
     std::vector<std::vector<int> > ptsvec;
-    if(n == 4 && cos(maxInnerAngle)<0 && maxcangle > -cos(maxInnerAngle)) {
+    int n = pts.size();
+    if(n == 4 && cos(maxInnerAngle)<0 && cangle[maxindex] > -cos(maxInnerAngle)) {
         std::vector<int> p1;
         std::vector<int> p2;
         for(int i=0; i<3; ++i) {
@@ -158,11 +171,12 @@ int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
     for(int i=0; i<ptsvec.size(); ++i) {
         std::vector<int> cell;
         n = ptsvec[i].size();
-        for(int j= 0; j<n; ++j) {
+        CalculateCosAngle(ptsvec[i], cangle, maxindex, minabsindex);
+        for(int j= minabsindex; j<n+minabsindex; ++j) {
             std::set<int> p;
             std::vector<int> pv;
-            p.insert(ptsvec[i][j]);     p.insert(ptsvec[i][(j+1)%n]);
-            pv.push_back(ptsvec[i][j]); pv.push_back(ptsvec[i][(j+1)%n]);
+            p.insert(    ptsvec[i][j%n]); p.insert(    ptsvec[i][(j+1)%n]);
+            pv.push_back(ptsvec[i][j%n]); pv.push_back(ptsvec[i][(j+1)%n]);
             if(m_edgesIndex.find(p) == m_edgesIndex.end()) {
                 m_edgesIndex[p] = m_edges.size();
                 m_edges.push_back(pv);

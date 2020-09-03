@@ -36,6 +36,7 @@ private:
     int loadNode(std::ifstream &inxml, int N, char buffer[]);
     int loadElements(std::ifstream &inxml, int N, char buffer[], std::set<int> types, double maxInnerAngle);
     int AddSplitElemens(std::vector<int> pts, double maxInnerAngle);
+    void CalculateCosAngle(std::vector<int> pts, std::vector<double> &cangle, int & maxc, int & minabs);
     std::map<int, int> m_pIDf2s;
 };
 #endif // MESHREGION_H
