@@ -21,7 +21,7 @@ public:
     int getCellsNumber();
     void transformation(double AoA);
     void sortCellFromQtoT();
-    int loadFromMsh(std::string filename, double maxInnerAngle = 2.53072741539);
+    int loadFromMsh(std::string filename, double maxInnerAngle = 2.35619449019234);
     std::vector<std::vector<int>> extractBoundary();
     int pointIsExist(std::vector<double> p, int &pId);
     void rebuildEdgesIndex();
