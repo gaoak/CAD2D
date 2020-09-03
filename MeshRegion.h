@@ -21,7 +21,7 @@ public:
     int getCellsNumber();
     void transformation(double AoA);
     void sortCellFromQtoT();
-    int loadFromMsh(std::string filename);
+    int loadFromMsh(std::string filename, double maxInnerAngle = 2.53072741539);
     std::vector<std::vector<int>> extractBoundary();
     int pointIsExist(std::vector<double> p, int &pId);
     void rebuildEdgesIndex();
@@ -34,7 +34,8 @@ public:
     std::vector<double> intersection(std::vector<double> l0, std::vector<double> l1);
 private:
     int loadNode(std::ifstream &inxml, int N, char buffer[]);
-    int loadElements(std::ifstream &inxml, int N, char buffer[], std::set<int> types);
+    int loadElements(std::ifstream &inxml, int N, char buffer[], std::set<int> types, double maxInnerAngle);
+    int AddSplitElemens(std::vector<int> pts, double maxInnerAngle);
     std::map<int, int> m_pIDf2s;
 };
 #endif // MESHREGION_H

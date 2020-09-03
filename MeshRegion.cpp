@@ -46,7 +46,7 @@ std::vector<double> MeshRegion::intersection(std::vector<double> l0, std::vector
     return res;
 }
 
-int MeshRegion::loadFromMsh(std::string filename) {
+int MeshRegion::loadFromMsh(std::string filename, double maxInnerAngle) {
     std::ifstream inxml(filename.c_str());
     if(!inxml.is_open()) return -1;
     char buffer[LINEBUFFERSIZE];
@@ -68,7 +68,7 @@ int MeshRegion::loadFromMsh(std::string filename) {
             std::set<int> elemtypes;
             elemtypes.insert(QUADELEMENT);
             elemtypes.insert(TRIGELEMENT);
-            loadElements(inxml, nElem, buffer, elemtypes);
+            loadElements(inxml, nElem, buffer, elemtypes, maxInnerAngle);
         }
         if(strVers.compare(buffer) == 0) {
             inxml.getline(buffer, LINEBUFFERSIZE);
@@ -100,7 +100,7 @@ int MeshRegion::loadNode(std::ifstream &inxml, int N, char buffer[]) {
     }
     return 0;
 }
-int MeshRegion::loadElements(std::ifstream &inxml, int N, char buffer[], std::set<int> types) {
+int MeshRegion::loadElements(std::ifstream &inxml, int N, char buffer[], std::set<int> types, double maxInnerAngle) {
     for(int i=0; i<N; ++i) {
         inxml.getline(buffer, LINEBUFFERSIZE);
         int elemType = 0, ntag = 0, ie = 0;
@@ -112,13 +112,57 @@ int MeshRegion::loadElements(std::ifstream &inxml, int N, char buffer[], std::se
         else {
             continue;
         }
-        val[ntag+3+elemType+1] = val[ntag+3];
+        std::vector<int> pointseries;
+        for(int j= ntag+3+elemType; j>=ntag+3; --j) {
+            pointseries.push_back(m_pIDf2s[val[j]]);
+        }
+        AddSplitElemens(pointseries, maxInnerAngle);
+    }
+    return 0;
+}
+
+int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
+    double maxcangle = -1E11;
+    int maxindex = -1;
+    int n = pts.size();
+    for(int i=0; i<n; ++i) {
+        double xm1 = m_pts[pts[(i+n-1)%n]][0];
+        double ym1 = m_pts[pts[(i+n-1)%n]][1];
+        double x   = m_pts[pts[(i    )%n]][0];
+        double y   = m_pts[pts[(i    )%n]][1];
+        double xp1 = m_pts[pts[(i+1  )%n]][0];
+        double yp1 = m_pts[pts[(i+1  )%n]][1];
+        double nmx = (x-xm1)/sqrt((x-xm1)*(x-xm1)+(y-ym1)*(y-ym1));
+        double nmy = (y-ym1)/sqrt((x-xm1)*(x-xm1)+(y-ym1)*(y-ym1));
+        double npx = (xp1-x)/sqrt((xp1-x)*(xp1-x)+(yp1-y)*(yp1-y));
+        double npy = (yp1-y)/sqrt((xp1-x)*(xp1-x)+(yp1-y)*(yp1-y));
+        double cangle = nmx*npx + nmy*npy;
+        if(cangle>maxcangle) {
+            maxcangle = cangle;
+            maxindex = i;
+        }
+    }
+    std::vector<std::vector<int> > ptsvec;
+    if(n == 4 && cos(maxInnerAngle)<0 && maxcangle > -cos(maxInnerAngle)) {
+        std::vector<int> p1;
+        std::vector<int> p2;
+        for(int i=0; i<3; ++i) {
+            p1.push_back(pts[(maxindex+i)%n]);
+            p2.push_back(pts[(maxindex+i+2)%n]);
+        }
+        ptsvec.push_back(p1);
+        ptsvec.push_back(p2);
+    } else {
+        ptsvec.push_back(pts);
+    }
+    for(int i=0; i<ptsvec.size(); ++i) {
         std::vector<int> cell;
-        for(int j= ntag+3+elemType+1; j>ntag+3; --j) {
+        n = ptsvec[i].size();
+        for(int j= 0; j<n; ++j) {
             std::set<int> p;
             std::vector<int> pv;
-            p.insert(m_pIDf2s[val[j]]);     p.insert(m_pIDf2s[val[j-1]]);
-            pv.push_back(m_pIDf2s[val[j]]); pv.push_back(m_pIDf2s[val[j-1]]);
+            p.insert(ptsvec[i][j]);     p.insert(ptsvec[i][(j+1)%n]);
+            pv.push_back(ptsvec[i][j]); pv.push_back(ptsvec[i][(j+1)%n]);
             if(m_edgesIndex.find(p) == m_edgesIndex.end()) {
                 m_edgesIndex[p] = m_edges.size();
                 m_edges.push_back(pv);
@@ -127,7 +171,6 @@ int MeshRegion::loadElements(std::ifstream &inxml, int N, char buffer[], std::se
         }
         m_cells.push_back(cell);
     }
-    return 0;
 }
 
 bool MeshRegion::consistancyCheck(MeshRegion m) {
@@ -195,7 +238,7 @@ std::vector<std::vector<int>> MeshRegion::extractBoundary() {
             std::cout << "Warning: in region" << m_name <<  ", pts " << (it->first) << ", = (" << m_pts[(it->first)][0] << ", " << m_pts[(it->first)][1] << "), on edge " << it->second[0] << "only used once." << std::endl;
         }
     }
-    std::cout << "Extract " << pts.size() << " points on the boundary in region " << m_name << std::endl;
+    //std::cout << "Extract " << pts.size() << " points on the boundary in region " << m_name << std::endl;
     int ptsIndex = -1;
     int nbnds = -1;
     while(pts.size()>0) {
@@ -238,7 +281,7 @@ std::vector<std::vector<int>> MeshRegion::extractBoundary() {
             ptsIndex = -1;
         }
     }
-    std::cout << "Extract " << m_unSharedPts.size() << " unconnected boundaries in region " << m_name << std::endl;
+    //std::cout << "Extract " << m_unSharedPts.size() << " unconnected boundaries in region " << m_name << std::endl;
     return m_unSharedPts;
 }
 
