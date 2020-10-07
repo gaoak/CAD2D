@@ -22,7 +22,7 @@ public:
     RectRegion(std::vector<std::vector<std::vector<double> > > edges, std::string name, bool connectivityCheck = true, double tolerance = 1.E-6, int edgeAttractMesh = 0, double attractEps = 1.);
     std::vector<double> EvaluateEdgePts(int i, double s);
     void PrintEdge(int eID, int N = 11);
-    int MeshGen(int M, int N, MeshType method = eStraightLine, bool trimWakeSlope = false);
+    int MeshGen(int M, int N, MeshType method = eStraightLine, bool trimWakeSlope = false, double offset0 = 0., double offset1 = 0.);
     void Tec360Pts(std::string fileName);
     int m_M; // number of elements
     int m_N; // number of elements
@@ -31,6 +31,7 @@ public:
     std::vector<double> m_edgesDirec;
     std::vector<std::vector<double>> m_vertex;
     std::vector<double> getVertex(int i);
+    std::vector<double> getVertexOffset(int i);
 private:
     EdgeType m_edgeType;
     int CheckConnectivity();
@@ -38,8 +39,9 @@ private:
     int m_edgeAttractMesh;
     double m_attractEps;
     int ptsByIsoParametric();
-    int ptsByBoundaryLayer(bool trimWakeSlope, MeshType method);
+    int ptsByBoundaryLayer(bool trimWakeSlope, MeshType method, double offset0 = 0., double offset1 = 0.);
     int ptsByStraightLine();
     std::vector<double> EvaluateEdgePtsDerivOneSide(int i, double s);
+    std::vector<std::vector<double> > m_offsetPts;
 };
 #endif // RECTREGION_H

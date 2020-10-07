@@ -185,6 +185,7 @@ int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
         }
         m_cells.push_back(cell);
     }
+    return ptsvec.size();
 }
 
 bool MeshRegion::consistancyCheck(MeshRegion m) {

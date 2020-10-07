@@ -199,7 +199,7 @@ std::vector<double> RectRegion::EvaluateEdgePtsDerivOneSide(int i, double s)
     return res;
 }
 
-int RectRegion::ptsByBoundaryLayer(bool trimWakeSlope, MeshType method) {
+int RectRegion::ptsByBoundaryLayer(bool trimWakeSlope, MeshType method, double offset0, double offset1) {
     // points generation
     //four vertexes + bounday points
     double dx = 2./m_M, dy = 2./m_N;
@@ -283,6 +283,20 @@ int RectRegion::ptsByBoundaryLayer(bool trimWakeSlope, MeshType method) {
 	            s = stretch(ratio*2.+5., sfirst, s, ratio);
 	        }
 	        for(int k=0; k<2; ++k) p[k] = edge0[i][k] + s*norm0[i][k];
+            if(i==0 && j) {
+                p[0] += -offset0*norm0[i][1];
+                p[1] +=  offset0*norm0[i][0];
+                if(j==1) m_offsetPts.push_back(p);
+            }
+            if(i==m_M && j) {
+                p[0] +=  offset1*norm0[i][1];
+                p[1] += -offset1*norm0[i][0];
+                if(j==1) m_offsetPts.push_back(p);
+            }
+            if(i==0 && j==0) m_vertex[0] = p;
+            if(i==m_M && j==0) m_vertex[1] = p;
+            if(i==m_M && j==m_N) m_vertex[2] = p;
+            if(i==0 && j==m_N) m_vertex[3] = p;
             m_pts.push_back(p);
             if(i==0 || j==0 || i==m_M || j==m_N) m_bndPts.insert(m_pts.size()-1);
         }
@@ -290,16 +304,20 @@ int RectRegion::ptsByBoundaryLayer(bool trimWakeSlope, MeshType method) {
     return m_pts.size();
 }
 
+std::vector<double> RectRegion::getVertexOffset(int i) {
+    return m_offsetPts[i];
+}
+
 std::vector<double> RectRegion::getVertex(int i) {
     return m_vertex[i];
 }
 
-int RectRegion::MeshGen(int M, int N, MeshType method, bool trimWakeSlope)
+int RectRegion::MeshGen(int M, int N, MeshType method, bool trimWakeSlope, double offset0, double offset1)
 {
     m_M = M;
     m_N = N;
     if(method == eBoundaryLayer0 || method == eBoundaryLayer1) {
-        ptsByBoundaryLayer(trimWakeSlope, method);
+        ptsByBoundaryLayer(trimWakeSlope, method, offset0, offset1);
     }else if(method == eIsoparametric){
         ptsByIsoParametric();
     }else {
