@@ -16,7 +16,7 @@ public:
     int outCOMPO(std::string filename, std::vector<int> comps);
     void outOuterRegion(std::string filename, std::vector<std::vector<double>> box, std::vector<double> center,double radius, bool exclude);
     void outInnerRegion(std::string filename, std::vector<std::vector<double>> breakpts, std::vector<double> center, double radius);
-    int RemapBoundaryPts(void* edgeFun, int N, int bndID, int Ncurve, double AoA, int direction, void* mapFun);
+    int RemapPts(void* mapFun);
 private:
     std::map<int, std::vector<int>> m_boundary;
     void findAllBoundaryEdges();

@@ -10,7 +10,7 @@ public:
     std::vector<double> down(double x);
 	double findx(double s, int up = 1);
 	double finds(double x, int up = 1);
-    std::vector<double> roundTrailingEdge(std::vector<double>&p0);
+    std::vector<double> roundTrailingEdge(std::vector<double>&p0, double eps = 1.E-8);
 protected:
     double findx(double s, std::vector<std::vector<double>> & arc);
     double finds(double x, std::vector<std::vector<double>> & arc);

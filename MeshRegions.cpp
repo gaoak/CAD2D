@@ -227,34 +227,13 @@ int MeshRegions::AddRegion(const MeshRegion &region) {
     return 0;
 }
 
-int MeshRegions::RemapBoundaryPts(void* edgeFun, int N, int bndID, int Ncurve, double AoA, int direction, void* mapFun) {
-    if(m_boundarydefinitionStats[bndID] < 0) {
-        return -1;
-    }
-	std::vector<double>(*edgeFunction)(double) = (std::vector<double>(*)(double))edgeFun;
+int MeshRegions::RemapPts(void* mapFun) {
+    if(mapFun==nullptr) return 0;
     std::vector<double>(* mapFunction)(std::vector<double>) = (std::vector<double>(*)(std::vector<double>))mapFun;
-	double ds = 2./N;
-    double dir = 1.;
-    if(direction < 0) dir = -1.;
-	//for(auto it = m_edgesIndex.begin(); it!=m_edgesIndex.end(); ++it) {
-	//    std::cout << "EIndex " << *(it->first.begin()) << ", " << (it->second) << std::endl;
-	//}
-	for(int i=0; i<N; ++i) {
-		std::vector<double> p0 = edgeFunction( dir*(-1.+    i*ds) );
-		std::vector<double> p1 = edgeFunction( dir*(-1.+(i+1)*ds) );
-        transform(p0, AoA);
-        transform(p1, AoA);
-		int id0, id1;
-        if(mapFun) {
-            if(pointIsExist(p0, id0)) {
-                m_pts[id0] = mapFunction(m_pts[id0]);
-            }
-            if(pointIsExist(p1, id1)) {
-                m_pts[id0] = mapFunction(m_pts[id0]);
-            }
-        }
+    for(int i=0; i<m_pts.size(); ++i) {
+		m_pts[i] = mapFunction(m_pts[i]);
     }
-    return 0;
+    return m_pts.size();
 }
 
 int MeshRegions::defineBoundary(void* edgeFun, int N, int bndID, int Ncurve, double AoA, int direction, void* mapFun) {
@@ -269,6 +248,10 @@ int MeshRegions::defineBoundary(void* edgeFun, int N, int bndID, int Ncurve, dou
 	for(int i=0; i<N; ++i) {
 		std::vector<double> p0 = edgeFunction( dir*(-1.+    i*ds) );
 		std::vector<double> p1 = edgeFunction( dir*(-1.+(i+1)*ds) );
+        if(mapFun) {
+            p0 = mapFunction(p0);
+            p1 = mapFunction(p1);
+        }
         transform(p0, AoA);
         transform(p1, AoA);
 		int id0, id1;

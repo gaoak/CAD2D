@@ -12,6 +12,34 @@ MeshRegion::MeshRegion(std::string name, double tolerance)
     m_tolerance = tolerance;
 }
 
+MeshRegion::MeshRegion(std::string name, std::vector<std::vector<double> > &p, bool sort, double tolerance)
+{
+    m_name = name;
+    m_tolerance = tolerance;
+    int n = p.size();
+    if(n<3 || n>4) {
+        std::cout << "error: illegal call of MeshRegion using points." << std::endl;
+        return;
+    }
+    std::vector<int> cell, ptsvec;
+    std::vector<double> cangle;
+    int maxindex, minabsindex;
+    for(int i=0; i<n; ++i) {
+        m_pts.push_back(p[i]);
+        m_bndPts.insert(i);
+        std::vector<int> e;
+        e.push_back(i); e.push_back((i+1)%n);
+        m_edges.push_back(e);
+        ptsvec.push_back(i);
+    }
+    CalculateCosAngle(ptsvec, cangle, maxindex, minabsindex);
+    if(!sort) minabsindex = 0;
+    for(int j= minabsindex; j<n+minabsindex; ++j) {
+        cell.push_back(j%n);
+    }
+    m_cells.push_back(cell);
+}
+
 void MeshRegion::transform(std::vector<double> &p, double AoA) {
     double x = p[0], y = p[1];
     p[0] = x*cos(AoA) + y*sin(AoA);

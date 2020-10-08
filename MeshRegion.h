@@ -12,6 +12,7 @@
 class MeshRegion {
 public:
     MeshRegion(std::string name, double tolerance = 1.E-6);
+    MeshRegion(std::string name, std::vector<std::vector<double> > &p, bool sort = true, double tolerance = 1.E-6);
     double m_tolerance;
     std::string m_name;
     std::vector<std::vector<double> > m_pts;
@@ -22,6 +23,7 @@ public:
     void transformation(double AoA);
     void sortCellFromQtoT();
     int loadFromMsh(std::string filename, double maxInnerAngle = 2.35619449019234);
+    int addTriangle(std::vector<std::vector<double>> pts);
     std::vector<std::vector<int>> extractBoundary();
     int pointIsExist(std::vector<double> p, int &pId);
     void rebuildEdgesIndex();
