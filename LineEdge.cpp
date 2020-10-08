@@ -129,7 +129,7 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
         ds = (m_discretes[m_N - m_nBLayers1] - m_discretes[m_nBLayers0])
             /(m_N - m_nBLayers0 - m_nBLayers1);
         if(ds <= 0) {
-            std::cout << "error: unsupported BL refine type for edge " << m_N << std::endl;
+            std::cout << "error: unsupported BL refine type for edge number [r] " << m_N << std::endl;
         }
         for(int i=m_nBLayers0 + 1;i<m_N - m_nBLayers1;++i) {
             m_discretes[i] = m_discretes[i-1] + ds;
@@ -199,12 +199,10 @@ LineEdge::LineEdge(double* p0, double* p1, int N, int refineType,
     m_p1 = p1;
     m_N = N;
     m_refineType = refineType;
-    if((BOUNDARYLAYER0 != refineType
-    &&  BOUNDARYLAYER1 != refineType
-    &&  BOUNDARYLAYER2 != refineType)
-    || N <= NBlayers0 + NBlayers1
-    || q0<1. || q1<1.) {
-        std::cout << "error: unsupported BL refine type for edge " << N << std::endl;
+    if((BOUNDARYLAYER0 == refineType && q0 < 1.)
+    || (BOUNDARYLAYER1 == refineType && q1 < 1.)
+    || (BOUNDARYLAYER2 == refineType && (q0 < 1. || q1 < 1.))) {
+        std::cout << "error: unsupported BL refine type for edge number " << N << std::endl;
     }
     m_h0 = h0;
     m_h1 = h1;

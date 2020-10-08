@@ -12,6 +12,7 @@ NACAmpxx::NACAmpxx(double m, double p, double t) {
     }
     m_t = t;
 	calculateArcTable();
+    m_rRoundTrailing = -1.;
 }
 
 NACAmpxx::NACAmpxx(std::string name) {
@@ -27,6 +28,7 @@ NACAmpxx::NACAmpxx(std::string name) {
         m_p = 100.;
     }
     calculateArcTable();
+    m_rRoundTrailing = -1.;
 }
 
 double NACAmpxx::findx(double s, int surf) {
@@ -66,6 +68,61 @@ double NACAmpxx::halft(double x) {
 	std::vector<double> xs(5, 1.);
 	for(int i=1; i<5; ++i) xs[i] = xs[i-1]*x;
     return 5.*m_t*(0.2969*sqrt(x) -0.1260*xs[1] - 0.3516*xs[2] + 0.2843*xs[3] - 0.1015*xs[4]);
+}
+
+double NACAmpxx::halfdt(double x) {
+    x = fabs(x);
+	std::vector<double> xs(5, 1.);
+	for(int i=1; i<5; ++i) xs[i] = xs[i-1]*x;
+    return 5.*m_t*(0.2969*0.5/sqrt(x) -0.1260 - 0.3516*2.*xs[1] + 0.2843*3.*xs[2] - 0.1015*4.*xs[3]);
+}
+
+std::vector<double> NACAmpxx::roundTrailingEdge(std::vector<double>&p0) {
+    if(m_rRoundTrailing < 0.) {
+        m_rRoundTrailing = calculateTrailingRadius(m_xRoundTrailing);
+    }
+    std::vector<double> p1;
+    if(m_rRoundTrailing < 0. || p0[0] <= m_xRoundTrailing) {
+        p1.push_back(p0[0]);
+        p1.push_back(p0[1]);
+    } else {
+        double r0 = p0[0] -1. + m_rRoundTrailing;
+        double r1 = p0[1];
+        double r = sqrt(r0*r0 + r1*r1);
+        p1.push_back(1. + m_rRoundTrailing*(r0/r-1.));
+        p1.push_back(     m_rRoundTrailing* r1/r);
+    }
+    return p1;
+}
+
+double NACAmpxx::calculateTrailingRadius(double &xtmp) {
+    if(m_m > 1.E-6) {
+        return -1.;
+    }
+    double eps = 1.E-14, rtmp, ftmp;
+    double x[2];
+    double f[2];
+    x[0] = 0.9;
+    x[1] = 0.9999; xtmp = x[1];
+    f[0] = testRadius(x[0], rtmp);
+    f[1] = testRadius(xtmp, rtmp);
+    while(fabs(f[1])>eps) {
+        xtmp = ( x[0]*f[1]-x[1]*f[0] )/( f[1]-f[0] );
+        ftmp = testRadius(xtmp, rtmp);
+        x[0] = x[1];
+        f[0] = f[1];
+        x[1] = xtmp;
+        f[1] = ftmp;
+    }
+    return rtmp;
+}
+
+double NACAmpxx::testRadius(double x, double &r) {
+    double y = halft(x);
+    double t = halfdt(x);
+    double xc = x + t*y;
+    r = 1.-xc;
+    return sqrt((x-xc)*(x-xc) + y*y) - r;
 }
 
 double NACAmpxx::chamber(double x) {
@@ -180,3 +237,9 @@ void NACAmpxx::calculateArcTable() {
 		p0 = p1;
     }
 }
+
+/*int main() {
+    NACAmpxx airf("0012");
+    double x;
+    printf("%20.12f, %20.12f, %20.12f, %20.12f\n", x, airf.calculateTrailingRadius(x), 1.-airf.calculateTrailingRadius(x), x);
+}*/
