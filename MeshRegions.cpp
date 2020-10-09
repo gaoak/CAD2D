@@ -117,7 +117,7 @@ int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi)
             bndEdgeNumber += m_boundary[i].size();
             for(unsigned int j=0; j<m_boundary[i].size(); j++) {
                 if(m_allBoundaryEdges.find(m_boundary[i][j]) == m_allBoundaryEdges.end()) {
-                    std::cout << "warning: in region " << m_name << ", Edge " << m_boundary[i][j] << " should not be a boundary " << std::endl;
+                    std::cout << "Error: in region " << m_name << ", Edge " << m_boundary[i][j] << " should not be a boundary " << std::endl;
                 } else {
                     allbndEdges.erase(m_boundary[i][j]);
                 }
@@ -131,7 +131,7 @@ int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi)
         }
     }
     if(bndEdgeNumber!=m_allBoundaryEdges.size()) {
-        std::cout << "warning: in region " << m_name << ", boudnary condition incomplete" << std::endl;
+        std::cout << "warning: in region " << m_name << ", boudnary condition incomplete C[" << bndIDMax << "]" << std::endl;
         outxml << "            <C ID=\""<< bndIDMax << "\"> E[";
         auto it=allbndEdges.begin();
         outxml << (*it);
@@ -179,6 +179,59 @@ int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi)
 }
 
 MeshRegions::MeshRegions(std::string name, double tolerance):MeshRegion(name, tolerance) {
+}
+
+int MeshRegions::AddRegion(const MeshRegion &region, std::set<int> &excludePts) {
+    MeshRegions rtmp("tmpreg", m_tolerance);
+    rtmp.AddRegion(region);
+    rtmp.ExcludePts(excludePts);
+    AddRegion(rtmp);
+    return 0;
+}
+
+int MeshRegions::ExcludePts(std::set<int> &excludePts) {
+    //rewrite pts
+    std::vector<std::vector<double> > pts;
+    std::map<int, int> ptsmap;
+    for(int i=0; i<m_pts.size(); ++i) {
+        if(excludePts.find(i)==excludePts.end()) {
+            pts.push_back(m_pts[i]);
+            ptsmap[i] = pts.size() - 1;
+        }
+    }
+    m_pts = pts;
+
+    std::vector<std::vector<int> > edges;
+    std::set<int> excludeEdge;
+    std::map<int, int> edgemap;
+    for(int i=0; i<m_edges.size(); ++i) {
+        if(excludePts.find(m_edges[i][0])!=excludePts.end() || excludePts.find(m_edges[i][1])!=excludePts.end()) {
+            excludeEdge.insert(i);
+        } else {
+            std::vector<int> e;
+            e.push_back(ptsmap[m_edges[i][0]]);
+            e.push_back(ptsmap[m_edges[i][1]]);
+            edges.push_back(e);
+            edgemap[i] = edges.size() - 1;
+        }
+    }
+    m_edges = edges;
+
+    std::vector<std::vector<int> > cells;
+    for(int i=0; i<m_cells.size(); ++i) {
+        bool toremove = false;
+        std::vector<int> c;
+        for(int j=0; j<m_cells[i].size(); ++j) {
+            c.push_back(edgemap[m_cells[i][j]]);
+            if(excludeEdge.find(m_cells[i][j])!=excludeEdge.end()) toremove = true;
+        }
+        if(!toremove) {
+            cells.push_back(c);
+        }
+    }
+    m_cells = cells;
+    ResetBndPts();
+    return 0;
 }
 
 int MeshRegions::AddRegion(const MeshRegion &region) {
@@ -312,6 +365,40 @@ void MeshRegions::findAllBoundaryEdges() {
                 m_allBoundaryEdges.insert(eid);
             }
         }
+    }
+}
+
+int MeshRegions::omeshBoundaryMapping(std::string filename, std::vector<double> center,double radius) {
+    extractBoundary();
+    int j;
+    //find outer edges
+    std::vector<int> unSharedPts;
+    std::set<int> unSharedSet;
+    std::map<int, int> mapping;
+    for(int i=0; i<m_unSharedPts.size(); ++i) {
+        for(j=0; j<m_unSharedPts[i].size(); ++j) {
+            if(fabs(m_pts[m_unSharedPts[i][j]][0]-center[0]) + fabs(m_pts[m_unSharedPts[i][j]][1]-center[1])<radius) {
+                unSharedPts = m_unSharedPts[i];
+                break;
+            }
+        }
+    }
+    for(int i=0; i<unSharedPts.size(); ++i) {
+        unSharedSet.insert(unSharedPts[i]);
+    }
+    for(int i=0; i<m_edges.size(); ++i) {
+        if(unSharedSet.find(m_edges[i][0]) != unSharedSet.end() && unSharedSet.find(m_edges[i][1]) == unSharedSet.end()) {
+            mapping[m_edges[i][0]] = m_edges[i][1];
+        } else if(unSharedSet.find(m_edges[i][1]) != unSharedSet.end() && unSharedSet.find(m_edges[i][0]) == unSharedSet.end()) {
+            mapping[m_edges[i][1]] = m_edges[i][0];
+        }
+    }
+    std::ofstream ofile(filename.c_str());
+    char buffer[1000];
+    ofile << mapping.size() << " 2" << std::endl;
+    for(auto it=mapping.begin(); it!=mapping.end(); ++it) {
+        sprintf(buffer, "%25.18lf %25.18lf\n%25.18lf %25.18lf\n", m_pts[it->first][0], m_pts[it->first][1], m_pts[it->second][0], m_pts[it->second][1]);
+        ofile << buffer;
     }
 }
 

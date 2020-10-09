@@ -26,7 +26,6 @@ MeshRegion::MeshRegion(std::string name, std::vector<std::vector<double> > &p, b
     int maxindex, minabsindex;
     for(int i=0; i<n; ++i) {
         m_pts.push_back(p[i]);
-        m_bndPts.insert(i);
         std::vector<int> e;
         e.push_back(i); e.push_back((i+1)%n);
         m_edges.push_back(e);
@@ -38,6 +37,7 @@ MeshRegion::MeshRegion(std::string name, std::vector<std::vector<double> > &p, b
         cell.push_back(j%n);
     }
     m_cells.push_back(cell);
+    ResetBndPts();
 }
 
 void MeshRegion::transform(std::vector<double> &p, double AoA) {
@@ -107,14 +107,21 @@ int MeshRegion::loadFromMsh(std::string filename, double maxInnerAngle) {
         }
         inxml.getline(buffer, LINEBUFFERSIZE);
     }
+    ResetBndPts();
+    return 0;
+}
+
+int MeshRegion::ResetBndPts() {
+    m_bndPts.clear();
     extractBoundary();
     for(int i=0; i<m_unSharedPts.size(); ++i) {
         for(int j=0; j<m_unSharedPts[i].size(); ++j) {
-	   m_bndPts.insert(m_unSharedPts[i][j]); 
-	}
+            m_bndPts.insert(m_unSharedPts[i][j]);
+        }
     }
     return 0;
 }
+
 int MeshRegion::loadNode(std::ifstream &inxml, int N, char buffer[]) {
     for(int i=0; i<N; ++i) {
         inxml.getline(buffer, LINEBUFFERSIZE);

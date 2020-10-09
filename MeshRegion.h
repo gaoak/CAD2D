@@ -34,6 +34,7 @@ public:
     void transform(std::vector<double> &p, double AoA);
     std::vector<double> getLineFromVertex(std::vector<double> A, std::vector<double>B);
     std::vector<double> intersection(std::vector<double> l0, std::vector<double> l1);
+    int ResetBndPts();
 private:
     int loadNode(std::ifstream &inxml, int N, char buffer[]);
     int loadElements(std::ifstream &inxml, int N, char buffer[], std::set<int> types, double maxInnerAngle);

@@ -139,6 +139,7 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
 
 double LineEdge::DiscreteStretch(double s, double h0, double h1) {
     double x = (s+1.)/2.*m_N;
+    if(x<0.) x = 0.;
     int ilower = floor(x);
     if(ilower==m_N) return 1.;
     BuildDiscretes(h0, h1);
@@ -199,9 +200,9 @@ LineEdge::LineEdge(double* p0, double* p1, int N, int refineType,
     m_p1 = p1;
     m_N = N;
     m_refineType = refineType;
-    if((BOUNDARYLAYER0 == refineType && q0 < 1.)
-    || (BOUNDARYLAYER1 == refineType && q1 < 1.)
-    || (BOUNDARYLAYER2 == refineType && (q0 < 1. || q1 < 1.))) {
+    if((BOUNDARYLAYER0 == refineType && (q0 < 1. || N <= NBlayers0))
+    || (BOUNDARYLAYER1 == refineType && (q1 < 1. || N <= NBlayers1))
+    || (BOUNDARYLAYER2 == refineType && (q0 < 1. || q1 < 1. || N <= NBlayers0 + NBlayers1))) {
         std::cout << "error: unsupported BL refine type for edge number " << N << std::endl;
     }
     m_h0 = h0;

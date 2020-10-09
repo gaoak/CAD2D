@@ -77,6 +77,12 @@ double NACAmpxx::halfdt(double x) {
     return 5.*m_t*(0.2969*0.5/sqrt(x) -0.1260 - 0.3516*2.*xs[1] + 0.2843*3.*xs[2] - 0.1015*4.*xs[3]);
 }
 
+double NACAmpxx::roundTrailingSize() {
+    double x;
+    calculateTrailingRadius(x);
+    return 1. - x;
+}
+
 std::vector<double> NACAmpxx::roundTrailingEdge(std::vector<double>&p0, double eps) {
     if(m_rRoundTrailing < 0.) {
         m_rRoundTrailing = calculateTrailingRadius(m_xRoundTrailing);
