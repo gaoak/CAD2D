@@ -14,6 +14,7 @@
 #define BOUNDARYLAYER0 7 
 #define BOUNDARYLAYER1 8
 #define BOUNDARYLAYER2 9
+#define BOUNDARYLAYER4 10
 
 class LineEdge {
 public: 
