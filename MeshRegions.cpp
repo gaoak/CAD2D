@@ -400,6 +400,7 @@ int MeshRegions::omeshBoundaryMapping(std::string filename, std::vector<double> 
         sprintf(buffer, "%25.18lf %25.18lf\n%25.18lf %25.18lf\n", m_pts[it->first][0], m_pts[it->first][1], m_pts[it->second][0], m_pts[it->second][1]);
         ofile << buffer;
     }
+    return 0;
 }
 
 void MeshRegions::outOuterRegion(std::string filename, std::vector<std::vector<double>> box, std::vector<double> center, double radius, bool exclude) {

@@ -164,6 +164,7 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
             m_discretes[i] = m_discretes[i-1] + ds;
         }
     }
+    return 0.;
 }
 
 double LineEdge::DiscreteStretch(double s, double h0, double h1) {
