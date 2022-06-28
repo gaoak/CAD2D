@@ -6,8 +6,7 @@
 #include "SplineEdge.h"
 #include "util.h"
 
-SplineEdge::SplineEdge(std::string filename,
-    std::map<int, double> params, int dim) {
+SplineEdge::SplineEdge(std::string filename) {
     // clean variables
     m_pts.clear();
     m_spline.clear();
@@ -15,8 +14,23 @@ SplineEdge::SplineEdge(std::string filename,
     // working space
     char buffer[1000];
     double p0, p1;
-    // read points from file
     std::ifstream infile(filename.c_str());
+    if(!infile.is_open()) {
+        std::cout << "Error: unable to open file " << filename << std::endl;
+        exit(-1);
+    }
+    // read header
+    std::map<int, double> params;
+    int dim;
+    infile.getline(buffer, sizeof(buffer));
+    sscanf(buffer, "%d", &dim);
+    while(NanString(buffer, sizeof(buffer)) && !infile.eof()) {
+        int i1, i2;
+        infile.getline(buffer, sizeof(buffer));
+        sscanf(buffer, "%d%d", &i1, &i2);
+        params[i1] = i2;
+    }
+    // read points from file
     infile.getline(buffer, sizeof(buffer));
     while(!infile.eof()) {
         sscanf(buffer, "%lf%lf", &p0, &p1);

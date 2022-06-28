@@ -7,8 +7,8 @@
 
 class SplineEdge {
 public:
-    SplineEdge(std::string filename, std::map<int, double> params, int dim);
-    std::vector<double> Evaluate(double x, int d);
+    SplineEdge(std::string filename);
+    std::vector<double> Evaluate(double x, int d = 0);
     std::vector<double> EvaluateTau(double tau);
     std::vector<double> findx(double s);
     double finds(double x, int d);

@@ -16,3 +16,12 @@ double distance(std::vector<std::vector<double> > p) {
     }
     return res;
 }
+
+bool NanString(const char *buffer, size_t N) {
+    for(size_t i=0; i<N && buffer[i]; ++i) {
+        if(buffer[i]!=' ') {
+            return (buffer[i]<'0' || buffer[i]>'9');
+        }
+    }
+    return true;
+}
