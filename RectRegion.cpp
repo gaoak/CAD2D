@@ -189,7 +189,7 @@ std::vector<double> RectRegion::EvaluateEdgePtsDerivOneSide(int i, double s)
 {
     double dir = 1.;
     if(s>0.) dir = -1.;
-    double h = 0.001*dir;
+    double h = 0.0001*dir;
     std::vector<std::vector<double>> f;
     for(int j=0; j<7; ++j) {
         f.push_back(EvaluateEdgePts(i, s + j*h));
