@@ -83,6 +83,10 @@ void SplineEdge::calculateArcTable() {
     m_ArcLength = arcl;
 }
 
+std::vector<double> SplineEdge::Evaluate(double x, int d) {
+    return findx(finds(x, d));
+}
+
 std::vector<double> SplineEdge::findx(double s) {
     int is = m_pts.size();
     int it = is + 1;
@@ -130,18 +134,19 @@ double SplineEdge::finds(std::vector<double> x, int d) {
     }
 }*/
 
+/*
 int main() {
     std::map<int, double> params;
-    params[1] = 0.;
-    SplineEdge spline("clarky_up.dat", params, 2);
+    params[0] = 0.;
+    SplineEdge spline("clarky_low.dat", params, 2);
 
 
     std::ofstream outfile("interped.dat");
-    for(double x=0.; x<=0.1; x+=0.000020) {
+    for(double x=0.; x<=1.001; x+=0.0020) {
         double s = spline.finds(x, 0);
         //std::cout << "x:" << x[0] << ", s:" << s << std::endl;
         std::vector<double> p = spline.findx(s);
         outfile << p[0] << " " << p[1] << std::endl;
     }
     outfile.close();
-}
+}*/
