@@ -24,11 +24,13 @@ SplineEdge::SplineEdge(std::string filename) {
     int dim;
     infile.getline(buffer, sizeof(buffer));
     sscanf(buffer, "%d", &dim);
-    while(NanString(buffer, sizeof(buffer)) && !infile.eof()) {
-        int i1, i2;
+    infile.getline(buffer, sizeof(buffer));
+    while(!NanString(buffer, sizeof(buffer)) && !infile.eof()) {
+        int i1;
+        double v1;
+        sscanf(buffer, "%d%lf", &i1, &v1);
+        params[i1] = v1;
         infile.getline(buffer, sizeof(buffer));
-        sscanf(buffer, "%d%d", &i1, &i2);
-        params[i1] = i2;
     }
     // read points from file
     infile.getline(buffer, sizeof(buffer));

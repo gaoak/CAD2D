@@ -186,6 +186,7 @@ LineEdge::LineEdge(double* p0, double* p1, int N, int refineType, double h0, dou
     m_h1 = h1*N;
 }
 
+// s = [-1., 1.]
 std::vector<double> LineEdge::Evaluate(double s) {
     double Len = sqrt((m_p0[0]-m_p1[0])*(m_p0[0]-m_p1[0]) + (m_p0[1]-m_p1[1])*(m_p0[1]-m_p1[1]));
     m_g0 = m_h0/Len;
