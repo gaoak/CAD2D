@@ -100,7 +100,11 @@ void SplineEdge::calculateArcTable() {
 }
 
 std::vector<double> SplineEdge::Evaluate(double x, int d) {
-    return findx(finds(x, d));
+    std::vector<int> index(m_pts.size());
+    for(size_t i=0; i<index.size(); ++i) {
+        index[i] = i;
+    }
+    return finds(x, d, index);
 }
 
 std::vector<double> SplineEdge::findx(double s) {
@@ -118,6 +122,13 @@ std::vector<double> SplineEdge::findx(double s) {
 }
 
 double SplineEdge::finds(double x, int d) {
+    int is = m_pts.size();
+    std::vector<int> index{is};
+    std::vector<double> res = finds(x, d, index);
+    return res[0];
+}
+
+std::vector<double> SplineEdge::finds(double x, int d, std::vector<int> &index) {
     size_t i = 0;
     if((m_arc[d][1]-m_arc[d][0])*(m_arc[d][0]-x)>=0.) {
         i = 0;
@@ -128,8 +139,12 @@ double SplineEdge::finds(double x, int d) {
             }
         }
     }
-    int is = m_pts.size();
-    return m_arc[is][i] + (m_arc[is][i+1]-m_arc[is][i])*(x - m_arc[d][i])/(m_arc[d][i+1]-m_arc[d][i]);
+    std::vector<double> res(index.size());
+    for(size_t k=0; k<index.size(); ++k) {
+        int is = index[k];
+        res[k] = m_arc[is][i] + (m_arc[is][i+1]-m_arc[is][i])*(x - m_arc[d][i])/(m_arc[d][i+1]-m_arc[d][i]);
+    }
+    return res;
 }
 
 /*

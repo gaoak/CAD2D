@@ -9,11 +9,12 @@ class SplineEdge {
 public:
     SplineEdge(std::string filename);
     std::vector<double> Evaluate(double x, int d = 0);
-    std::vector<double> EvaluateTau(double tau);
     std::vector<double> findx(double s);
     double finds(double x, int d);
+    std::vector<double> finds(double x, int d, std::vector<int> &index);
     double m_ArcLength;
 private:
+    std::vector<double> EvaluateTau(double tau);
     void calculateArcTable();
     void appendArcLength(std::vector<double> p, double s, double tau);
     std::vector<std::vector<double>> m_arc;
