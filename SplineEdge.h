@@ -3,7 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <map>
-#include <boost/math/interpolators/cubic_b_spline.hpp>
+#include <boost/math/interpolators/cardinal_cubic_b_spline.hpp>
 
 class SplineEdge {
 public:
@@ -19,7 +19,7 @@ private:
     void appendArcLength(std::vector<double> p, double s, double tau);
     std::vector<std::vector<double>> m_arc;
     std::vector<std::vector<double> > m_pts;
-    std::vector<boost::math::cubic_b_spline<double> > m_spline;
+    std::vector<boost::math::interpolators::cardinal_cubic_b_spline<double> > m_spline;
 };
 
 #endif

@@ -55,7 +55,7 @@ SplineEdge::SplineEdge(std::string filename) {
         if (params.find(2*d+1)==params.end()) {
             params[2*d+1] = (m_pts[d][np-1] - m_pts[d][np-2])/step;
         }
-        m_spline.push_back(boost::math::cubic_b_spline<double>(
+        m_spline.push_back(boost::math::interpolators::cardinal_cubic_b_spline<double>(
             m_pts[d].begin(), m_pts[d].end(),
             0, step,
             params[2*d], params[2*d+1]));
