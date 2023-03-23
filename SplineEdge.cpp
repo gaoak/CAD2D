@@ -6,6 +6,77 @@
 #include "SplineEdge.h"
 #include "util.h"
 
+/***
+ * find the point from the tau
+ * return a point on the spline
+***/
+std::vector<double> SplineEdge::EvaluateTau(double tau) {
+    std::vector<double> res(m_spline.size());
+    for(size_t d=0; d<m_spline.size(); ++d) {
+        res[d] = m_spline[d](tau);
+    }
+    return res;
+}
+
+/***
+ * find the point from a monotonically varying x = m_arc[d]
+ * first find tau by linear interpolation
+ * then EvaluateTau
+ * return a point on the spline
+***/
+std::vector<double> SplineEdge::Evaluatex(double x, int d) {
+    std::vector<int> target(1, ArchIndex::eTau);
+    return EvaluateTau(LookFor(x, d, target)[0]);
+}
+
+/***
+ * find the point from the arclength
+ * first find tau by linear interpolation
+ * then EvaluateTau
+ * return a point on the spline
+***/
+std::vector<double> SplineEdge::Evaluates(double s) {
+    std::vector<int> target(1, ArchIndex::eTau);
+    return EvaluateTau(LookFor(s, ArchIndex::eS, target)[0]);
+}
+
+/***
+ * find the point from the scaled arclength [-1, 1]
+ * first find tau by linear interpolation
+ * then EvaluateTau
+ * return a point on the spline
+***/
+std::vector<double> SplineEdge::Evaluate(double s) {
+    return Evaluates(s);
+}
+
+double SplineEdge::LookFors(double x, int d) {
+    std::vector<int> target(1, ArchIndex::eS);
+    return LookFor(x, d, target)[0];
+}
+
+/***
+ * find approximately values from given x[monotone]
+***/
+std::vector<double> SplineEdge::LookFor(double x, int d, std::vector<int> &target) {
+    size_t i = 0;
+    if((m_arc[d][1]-m_arc[d][0])*(m_arc[d][0]-x)>=0.) {
+        i = 0;
+    } else {
+        for(i=0; i<m_arc[d].size()-2; ++i) {
+            if((m_arc[d][i+1]-x)*(x-m_arc[d][i]) >= 0.) {
+                break;
+            }
+        }
+    }
+    std::vector<double> res(target.size());
+    for(size_t k=0; k<target.size(); ++k) {
+        int is = target[k];
+        res[k] = m_arc[is][i] + (m_arc[is][i+1]-m_arc[is][i])*(x - m_arc[d][i])/(m_arc[d][i+1]-m_arc[d][i]);
+    }
+    return res;
+}
+
 SplineEdge::SplineEdge(std::string filename) {
     // clean variables
     m_pts.clear();
@@ -20,6 +91,9 @@ SplineEdge::SplineEdge(std::string filename) {
         exit(-1);
     }
     // read header
+    //params format is (d, slope)
+    //slope on boundary d%2 in dimension [d/2]
+    //if slope is not given, one-side finite difference is used
     std::map<int, double> params;
     int dim;
     infile.getline(buffer, sizeof(buffer));
@@ -64,14 +138,6 @@ SplineEdge::SplineEdge(std::string filename) {
     calculateArcTable();
 }
 
-std::vector<double> SplineEdge::EvaluateTau(double tau) {
-    std::vector<double> res(m_spline.size());
-    for(size_t d=0; d<m_spline.size(); ++d) {
-        res[d] = m_spline[d](tau);
-    }
-    return res;
-}
-
 void SplineEdge::appendArcLength(std::vector<double> p, double s, double tau) {
     for(size_t i=0; i<m_pts.size(); ++i) {
         m_arc[i].push_back(p[i]);
@@ -80,7 +146,7 @@ void SplineEdge::appendArcLength(std::vector<double> p, double s, double tau) {
     m_arc[m_pts.size()+1].push_back(tau);
 }
 
-// arc[i]: x, y, z, s, tau
+// arc[i]: x, y, s, tau
 void SplineEdge::calculateArcTable() {
     m_arc.clear();
     m_arc.resize(2+m_pts.size());
@@ -99,56 +165,8 @@ void SplineEdge::calculateArcTable() {
     m_ArcLength = arcl;
 }
 
-std::vector<double> SplineEdge::Evaluate(double x, int d) {
-    std::vector<int> index(m_pts.size());
-    for(size_t i=0; i<index.size(); ++i) {
-        index[i] = i;
-    }
-    return finds(x, d, index);
-}
-
-std::vector<double> SplineEdge::findx(double s) {
-    int is = m_pts.size();
-    int it = is + 1;
-    auto lower = std::lower_bound(m_arc[is].begin(), m_arc[is].end(), s);
-    int l = lower - m_arc[is].begin();
-    if(l>m_arc[is].size()-2) {
-        l = m_arc[is].size() - 2;
-    }
-    double tau = m_arc[it][l] + (m_arc[it][l+1]-m_arc[it][l])*(s - m_arc[is][l])/(m_arc[is][l+1]-m_arc[is][l]);
-    //std::cout << "(" << l << "," << m_arc[is].size() << ":tau:" << tau << std::endl;
-    std::vector<double> p = EvaluateTau(tau);
-    return p;
-}
-
-double SplineEdge::finds(double x, int d) {
-    int is = m_pts.size();
-    std::vector<int> index{is};
-    std::vector<double> res = finds(x, d, index);
-    return res[0];
-}
-
-std::vector<double> SplineEdge::finds(double x, int d, std::vector<int> &index) {
-    size_t i = 0;
-    if((m_arc[d][1]-m_arc[d][0])*(m_arc[d][0]-x)>=0.) {
-        i = 0;
-    } else {
-        for(i=0; i<m_arc[d].size()-2; ++i) {
-            if((m_arc[d][i+1]-x)*(x-m_arc[d][i]) >= 0.) {
-                break;
-            }
-        }
-    }
-    std::vector<double> res(index.size());
-    for(size_t k=0; k<index.size(); ++k) {
-        int is = index[k];
-        res[k] = m_arc[is][i] + (m_arc[is][i+1]-m_arc[is][i])*(x - m_arc[d][i])/(m_arc[d][i+1]-m_arc[d][i]);
-    }
-    return res;
-}
-
 /*
-double SplineEdge::finds(std::vector<double> x, int d) {
+double SplineEdge::LookFors(std::vector<double> x, int d) {
     if((m_arc[d][1]-m_arc[d][0])*(m_arc[d][0]-x[d])>=0.) {
         std::vector<double> p{m_arc[0][0], m_arc[1][0], m_arc[2][0]};
         return - distance(x, p);
@@ -174,9 +192,9 @@ int main() {
 
     std::ofstream outfile("interped.dat");
     for(double x=0.; x<=1.001; x+=0.0020) {
-        double s = spline.finds(x, 0);
+        double s = spline.LookFors(x, 0);
         //std::cout << "x:" << x[0] << ", s:" << s << std::endl;
-        std::vector<double> p = spline.findx(s);
+        std::vector<double> p = spline.Evaluates(s);
         outfile << p[0] << " " << p[1] << std::endl;
     }
     outfile.close();
