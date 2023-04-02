@@ -23,10 +23,10 @@ public:
              double h0, double q0, int NBlayers0,
              double h1, double q1, int NBlayers1);
     std::vector<double> Evaluate(double s);
-    double DiscreteStretch(double s, double h0, double h1);
-    double BuildDiscretes(double ds, double ds1);
     int m_N;
 private:
+    double DiscreteStretch(double s, double h0, double h1);
+    double BuildDiscretes(double ds, double ds1);
     double* m_p0;
     double* m_p1;
     int m_refineType;

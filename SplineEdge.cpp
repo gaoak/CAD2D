@@ -47,6 +47,7 @@ std::vector<double> SplineEdge::Evaluates(double s) {
  * return a point on the spline
 ***/
 std::vector<double> SplineEdge::Evaluate(double s) {
+    s = 0.5 * (s + 1.0) * m_ArcLength;
     return Evaluates(s);
 }
 
