@@ -174,11 +174,11 @@ int RectRegion::ptsByStraightLine() {
   std::vector<std::vector<double>> edge0, edge1, edge2, edge3;
   for (int i = 0; i <= m_M; ++i) {
     edge0.push_back(EvaluateEdgePts(0, -1. + i * dx));
-    edge2.push_back(EvaluateEdgePts(2, -1. + i * dx));
+    edge2.push_back(EvaluateEdgePts(2,  1. - i * dx));
   }
   for (int j = 0; j <= m_N; ++j) {
     edge1.push_back(EvaluateEdgePts(1, -1. + j * dy));
-    edge3.push_back(EvaluateEdgePts(3, -1. + j * dy));
+    edge3.push_back(EvaluateEdgePts(3,  1. - j * dy));
   }
   std::vector<std::vector<double>> linesx, linesy;
   for (int j = 0; j <= m_N; ++j) {

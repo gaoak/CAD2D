@@ -26,7 +26,7 @@ public:
   int loadFromMsh(std::string filename,
                   double maxInnerAngle = 2.35619449019234);
   int addTriangle(std::vector<std::vector<double>> pts);
-  std::vector<std::vector<int>> extractBoundary();
+  std::vector<std::vector<int>> extractBoundaryPoints();
   int pointIsExist(std::vector<double> p, int &pId);
   void rebuildEdgesIndex();
   std::vector<std::vector<int>> m_unSharedPts;
@@ -39,6 +39,8 @@ public:
   std::vector<double> intersection(std::vector<double> l0,
                                    std::vector<double> l1);
   int ResetBndPts();
+  void CheckMesh(double angle = 75./180.*3.1415926);
+  void FixMesh();
 
 private:
   int loadNode(std::ifstream &inxml, int N, char buffer[]);
@@ -47,6 +49,8 @@ private:
   int AddSplitElemens(std::vector<int> pts, double maxInnerAngle);
   void CalculateCosAngle(std::vector<int> pts, std::vector<double> &cangle,
                          int &maxc, int &minabs);
+  void GetFacePts(int index, std::vector<int> & pts);
+  double ElementArea(int index);
   std::map<int, int> m_pIDf2s;
 };
 #endif // MESHREGION_H

@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <cmath>
 // regions manipulation
 // related with physics
 class MeshRegions : public MeshRegion {
@@ -16,6 +17,7 @@ public:
   int defineBoundary(void *edgeFun, int N, int bndID, int Ncurve = 2,
                      double AoA = 0., int direction = 1,
                      void *mapFun = nullptr);
+  int defineBoundary(std::vector<void*> edgeFuns, double angle = 10./180.*M_PI);
   int outCOMPO(std::string filename, std::vector<int> comps);
   void outOuterRegion(std::string filename,
                       std::vector<std::vector<double>> box,
@@ -36,6 +38,7 @@ private:
   void outGeo(std::string filename, std::vector<std::vector<double>> box,
               std::vector<std::vector<int>> unSharedPts);
   int ExcludePts(std::set<int> &excludePts);
+  std::vector<std::vector<int>> splitBoundaryPts(std::vector<std::vector<int>> &allbndpts, double angle);
   std::map<int, int> m_boundarydefinitionStats;
 };
 #endif
