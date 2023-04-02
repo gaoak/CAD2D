@@ -2,26 +2,26 @@
 #include <cmath>
 
 double distance(std::vector<double> p0, std::vector<double> p1) {
-    double res = 0.;
-    for(size_t i=0; i<p0.size() && i<p1.size(); ++i) {
-        res += (p0[i] - p1[i]) * (p0[i] - p1[i]);
-    }
-    return sqrt(res);
+  double res = 0.;
+  for (size_t i = 0; i < p0.size() && i < p1.size(); ++i) {
+    res += (p0[i] - p1[i]) * (p0[i] - p1[i]);
+  }
+  return sqrt(res);
 }
 
-double distance(std::vector<std::vector<double> > p) {
-    double res = 0.;
-    for(size_t i=1; i<p.size(); ++i) {
-        res += distance(p[i-1], p[i]);
-    }
-    return res;
+double distance(std::vector<std::vector<double>> p) {
+  double res = 0.;
+  for (size_t i = 1; i < p.size(); ++i) {
+    res += distance(p[i - 1], p[i]);
+  }
+  return res;
 }
 
 bool NanString(const char *buffer, size_t N) {
-    for(size_t i=0; i<N && buffer[i]; ++i) {
-        if(buffer[i]!=' ') {
-            return (buffer[i]<'0' || buffer[i]>'9');
-        }
+  for (size_t i = 0; i < N && buffer[i]; ++i) {
+    if (buffer[i] != ' ') {
+      return (buffer[i] < '0' || buffer[i] > '9');
     }
-    return true;
+  }
+  return true;
 }
