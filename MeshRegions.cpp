@@ -421,23 +421,24 @@ int MeshRegions::defineBoundary(void *edgeFun, int N, int bndID, int Ncurve,
   return 0;
 }
 
-static double getAngle(std::vector<double> p0, std::vector<double> p1, std::vector<double> p2) {
+static double getSinAngle(std::vector<double> p0, std::vector<double> p1, std::vector<double> p2) {
   double x0 = p1[0] - p0[0];
   double y0 = p1[1] - p0[1];
   double x1 = p2[0] - p1[0];
   double y1 = p2[1] - p1[1];
-  return asin((x0*y1-y0*x1)/sqrt(x0*x0+y0*y0)/sqrt(x1*x1+y1*y1));
+  return (x0*y1-y0*x1)/sqrt(x0*x0+y0*y0)/sqrt(x1*x1+y1*y1);
 }
 
 std::vector<std::vector<int>> MeshRegions::splitBoundaryPts(std::vector<std::vector<int>> &allbndpts, double angle) {
   std::vector<std::vector<int>> res;
+  double sinangle = sin(angle);
   for(auto &bnd : allbndpts) {
     std::vector<int> split;
     for(size_t i=0; i<bnd.size(); ++i) {
       int im1 = (i-1+bnd.size())%bnd.size();
       int ip1 = (i+1+bnd.size())%bnd.size();
-      double a = fabs(getAngle(m_pts[im1], m_pts[i], m_pts[ip1]));
-      if(a>angle) {
+      double a = fabs(getSinAngle(m_pts[bnd[im1]], m_pts[bnd[i]], m_pts[bnd[ip1]]));
+      if(a>sinangle) {
         split.push_back(i);
       }
     }
@@ -446,15 +447,15 @@ std::vector<std::vector<int>> MeshRegions::splitBoundaryPts(std::vector<std::vec
       for(int i=0; i<split.size()-1; ++i) {
         std::vector<int> bn;
         for(int j=split[i]; j<=split[i+1]; ++j) {
-          bn.push_back(j);
+          bn.push_back(bnd[j]);
         }
-        res.push_back(bnd);
+        res.push_back(bn);
       }
       std::vector<int> bn;
       for(int j=split[split.size()-1]; j<= split[0] + bnd.size();++j) {
-        bn.push_back(j%bnd.size());
+        bn.push_back(bnd[j%bnd.size()]);
       }
-      res.push_back(bnd);
+      res.push_back(bn);
     } else {
       res.push_back(bnd);
     }
@@ -467,26 +468,35 @@ int MeshRegions::defineBoundary(std::vector<void*> edgeFuns, double angle) {
   std::vector<std::vector<int>> allbndpts = splitBoundaryPts(tmp, angle);
   std::set<int> defined;
   int bndID = -1;
-  for(auto fun : edgeFuns) {
+  for(auto fun : edgeFuns)
+  {
     bool (*condition)(std::vector<double>&) =
       (bool(*)(std::vector<double>&))fun;
-    for (int i = 0; i < allbndpts.size(); ++i) {
-      bool findedge = false;
-      for (int j = 0; j < allbndpts[i].size(); ++j) {
-        int j1 = (j+1)%allbndpts[i].size();
-        if(condition(m_pts[allbndpts[i][j]]) && condition(m_pts[allbndpts[i][j1]])) {
-          std::set<int> es;
-          es.insert(allbndpts[i][j]);
-          es.insert(allbndpts[i][j1]);
-          if (m_edgesIndex.find(es) != m_edgesIndex.end() && defined.find(m_edgesIndex[es])==defined.end()) {
-            if(!findedge) {
-              findedge = true;
-              ++bndID;
-              m_boundary[bndID] = std::vector<int>();
-            }
-            m_boundary[bndID].push_back(m_edgesIndex[es]);
-            defined.insert(m_edgesIndex[es]);
+    bool findedge  =false;
+    for (int i = 0; i < allbndpts.size(); ++i)
+    {
+      if(defined.find(i)!=defined.end()) continue;
+      for (int j = 0; j < allbndpts[i].size(); ++j)
+      {
+        if(condition(m_pts[allbndpts[i][j]]) )
+        {
+          if(!findedge) {
+            findedge = true;
+            ++bndID;
+            m_boundary[bndID] = std::vector<int>();
           }
+          for (int k = 0; k < allbndpts[i].size(); ++k)
+          {
+            int k1 = (k+1)%allbndpts[i].size();
+            std::set<int> es;
+            es.insert(allbndpts[i][k]);
+            es.insert(allbndpts[i][k1]);
+            if (m_edgesIndex.find(es) != m_edgesIndex.end()) {
+              m_boundary[bndID].push_back(m_edgesIndex[es]);
+            }
+          }
+          defined.insert(i);
+          break;
         }
       }
     }

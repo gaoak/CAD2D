@@ -417,7 +417,9 @@ void MeshRegion::CheckMesh(double angle) {
     for(size_t i=0; i<m_cells.size(); ++i) {
       double jac = ElementArea(i);
       if(jac<=0.) {
-        std::cout << "error:" << m_name << " element " << i << " has negative Jacobi " << jac << "\n";
+        std::vector<int> tmppts;
+        GetFacePts(i, tmppts);
+        std::cout << "error:" << m_name << " element " << i << " at (" << m_pts[tmppts[0]][0] << ", " << m_pts[tmppts[0]][1] << ") has negative Jacobi " << jac << "\n";
         ++negJac;
       }
     }
