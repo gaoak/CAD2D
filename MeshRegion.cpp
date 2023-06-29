@@ -1,12 +1,13 @@
 #include "MeshRegion.h"
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 MeshRegion::MeshRegion(std::string name, double tolerance) {
   m_name = name;
@@ -168,9 +169,9 @@ int MeshRegion::loadElements(std::ifstream &inxml, int N, char buffer[],
 }
 
 void MeshRegion::CalculateCosAngle(std::vector<int> pts,
-                                   std::vector<double> &cangle, int &maxc,
+                                   std::vector<double> &cangle, int &minc,
                                    int &minabs) {
-  double maxcangle = -1E21;
+  double mincangle = 1E21;
   double minabscangle = 1E21;
   int n = pts.size();
   cangle = std::vector<double>(n);
@@ -190,9 +191,9 @@ void MeshRegion::CalculateCosAngle(std::vector<int> pts,
     double npy =
         (yp1 - y) / sqrt((xp1 - x) * (xp1 - x) + (yp1 - y) * (yp1 - y));
     cangle[i] = nmx * npx + nmy * npy;
-    if (cangle[i] > maxcangle) {
-      maxcangle = cangle[i];
-      maxc = i;
+    if (cangle[i] < mincangle) {
+      mincangle = cangle[i];
+      minc = i;
     }
     if (fabs(cangle[i]) < minabscangle) {
       minabscangle = fabs(cangle[i]);
@@ -203,17 +204,17 @@ void MeshRegion::CalculateCosAngle(std::vector<int> pts,
 
 int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
   std::vector<double> cangle;
-  int maxindex, minabsindex;
-  CalculateCosAngle(pts, cangle, maxindex, minabsindex);
+  int minindex, minabsindex;
+  CalculateCosAngle(pts, cangle, minindex, minabsindex);
   std::vector<std::vector<int>> ptsvec;
   int n = pts.size();
   if (n == 4 && cos(maxInnerAngle) < 0 &&
-      cangle[maxindex] > -cos(maxInnerAngle)) {
+      cangle[minindex] < cos(maxInnerAngle)) {
     std::vector<int> p1;
     std::vector<int> p2;
-    for (int i = 0; i < 3; ++i) {
-      p1.push_back(pts[(maxindex + i) % n]);
-      p2.push_back(pts[(maxindex + i + 2) % n]);
+    for (int i = n - 1; i < n + 2; ++i) {
+      p1.push_back(pts[(minindex + i) % n]);
+      p2.push_back(pts[(minindex + i + 2) % n]);
     }
     ptsvec.push_back(p1);
     ptsvec.push_back(p2);
@@ -223,8 +224,8 @@ int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
   for (int i = 0; i < ptsvec.size(); ++i) {
     std::vector<int> cell;
     n = ptsvec[i].size();
-    CalculateCosAngle(ptsvec[i], cangle, maxindex, minabsindex);
-    for (int j = minabsindex; j < n + minabsindex; ++j) {
+    CalculateCosAngle(ptsvec[i], cangle, minindex, minabsindex);
+    for (int j = minabsindex - 1 + n; j < n + n - 1 + minabsindex; ++j) {
       std::set<int> p;
       std::vector<int> pv;
       p.insert(ptsvec[i][j % n]);
@@ -285,7 +286,7 @@ void MeshRegion::rebuildEdgesIndex() {
 
 /***
  * Find all boundary points and split them based-on conectivity
-***/
+ ***/
 std::vector<std::vector<int>> MeshRegion::extractBoundaryPoints() {
   m_unSharedPts.clear();
   m_unSharedPtsSet.clear();
@@ -381,99 +382,186 @@ int MeshRegion::pointIsExist(std::vector<double> p, int &pId) {
 }
 
 void MeshRegion::CheckMesh(double angle) {
-    //check points
-    std::map<int, int> ptsc;
-    for(size_t i=0; i<m_edges.size(); ++i) {
-        std::vector<int> e = m_edges[i];
-        ptsc[e[0]] += 1;
-        ptsc[e[1]] += 1;
+  // check points
+  std::map<int, int> ptsc;
+  for (size_t i = 0; i < m_edges.size(); ++i) {
+    std::vector<int> e = m_edges[i];
+    ptsc[e[0]] += 1;
+    ptsc[e[1]] += 1;
+  }
+  int isolatePoints = 0;
+  for (auto it = ptsc.begin(); it != ptsc.end(); ++it) {
+    if (it->second == 1) {
+      std::cout << "error:" << m_name << " isolate point found ("
+                << m_pts[it->first][0] << "," << m_pts[it->first][1] << ","
+                << m_pts[it->first][2] << ")\n";
+      ++isolatePoints;
     }
-    int isolatePoints = 0;
-    for(auto it=ptsc.begin(); it!=ptsc.end(); ++it) {
-        if(it->second==1) {
-            std::cout << "error:" << m_name << " isolate point found (" << m_pts[it->first][0] << ","
-            << m_pts[it->first][1] << "," << m_pts[it->first][2] << ")\n";
-            ++isolatePoints;
-        }
+  }
+  // check edge
+  std::map<int, int> edgec;
+  char type;
+  std::vector<int> edges;
+  for (size_t i = 0; i < m_cells.size(); ++i) {
+    for (auto e : m_cells[i]) {
+      edgec[e] += 1;
     }
-    //check edge
-    std::map<int, int> edgec;
-    char type;
-    std::vector<int> edges;
-    for(size_t i=0; i<m_cells.size(); ++i) {
-        for(auto e: m_cells[i]) {
-            edgec[e] += 1;
-        }
+  }
+  int isolateEdges = 0;
+  for (auto it = edgec.begin(); it != edgec.end(); ++it) {
+    if (it->second == 1) {
+      // std::cout << "error:" << m_name << " isolate edge found edge[" <<
+      // it->first << "]\n";
+      ++isolateEdges;
     }
-    int isolateEdges = 0;
-    for(auto it=edgec.begin(); it!=edgec.end(); ++it) {
-        if(it->second == 1) {
-            //std::cout << "error:" << m_name << " isolate edge found edge[" << it->first << "]\n";
-            ++isolateEdges;
-        }
+  }
+  // check boundary definition
+  int negJac = 0;
+  for (size_t i = 0; i < m_cells.size(); ++i) {
+    double jac = ElementArea(i);
+    if (jac <= 0.) {
+      std::vector<int> tmppts;
+      GetFacePts(i, tmppts);
+      std::cout << "error:" << m_name << " element " << i << " at ("
+                << m_pts[tmppts[0]][0] << ", " << m_pts[tmppts[0]][1]
+                << ") has negative Jacobi " << jac << "\n";
+      ++negJac;
     }
-    //check boundary definition
-    int negJac = 0;
-    for(size_t i=0; i<m_cells.size(); ++i) {
-      double jac = ElementArea(i);
-      if(jac<=0.) {
-        std::vector<int> tmppts;
-        GetFacePts(i, tmppts);
-        std::cout << "error:" << m_name << " element " << i << " at (" << m_pts[tmppts[0]][0] << ", " << m_pts[tmppts[0]][1] << ") has negative Jacobi " << jac << "\n";
-        ++negJac;
-      }
-    }
-    std::cout << "Mesh Check summaries " << m_name << "\n";
-    std::cout << "Number of isolated points " << isolatePoints << "/" << m_pts.size() << "\n";
-    std::cout << "Number of isolated edges " << isolateEdges << "/" << m_edges.size() << "\n";
-    std::cout << "Number of negative Jacobi elements " << negJac << "/" << m_cells.size() << "\n";
+  }
+  std::cout << "Mesh Check summaries " << m_name << "\n";
+  std::cout << "Number of isolated points " << isolatePoints << "/"
+            << m_pts.size() << "\n";
+  std::cout << "Number of isolated edges " << isolateEdges << "/"
+            << m_edges.size() << "\n";
+  std::cout << "Number of negative Jacobi elements " << negJac << "/"
+            << m_cells.size() << "\n";
 }
 
 void MeshRegion::FixMesh() {
-  for(size_t i=0; i<m_cells.size(); ++i) {
-      double jac = ElementArea(i);
-      if(jac<=0.) {
-        std::reverse(m_cells[i].begin(), m_cells[i].end());
-      }
+  for (size_t i = 0; i < m_cells.size(); ++i) {
+    double jac = ElementArea(i);
+    if (jac <= 0.) {
+      std::reverse(m_cells[i].begin(), m_cells[i].end());
     }
+  }
 }
 
 double MeshRegion::ElementArea(int index) {
   std::vector<int> pts;
-      GetFacePts(index, pts);
-      std::vector<std::vector<double>> p;
-      for(size_t i=0; i<pts.size(); ++i) {
-        p.push_back(m_pts[pts[i]]);
-      }
-      double x0 = 0., y0 = 0, x1 = 0., y1 = 0.;
-      if (pts.size()==3) {
-        x0 = p[1][0] - p[0][0];
-        y0 = p[1][1] - p[0][1];
-        x1 = p[2][0] - p[1][0];
-        y1 = p[2][1] - p[1][1];
-      }else{
-        x0 = p[2][0] - p[0][0];
-        y0 = p[2][1] - p[0][1];
-        x1 = p[3][0] - p[1][0];
-        y1 = p[3][1] - p[1][1];
-      }
-      double jac = 0.5*(x0*y1 - x1*y0);
-      return jac;
+  GetFacePts(index, pts);
+  std::vector<std::vector<double>> p;
+  for (size_t i = 0; i < pts.size(); ++i) {
+    p.push_back(m_pts[pts[i]]);
+  }
+  double x0 = 0., y0 = 0, x1 = 0., y1 = 0.;
+  if (pts.size() == 3) {
+    x0 = p[1][0] - p[0][0];
+    y0 = p[1][1] - p[0][1];
+    x1 = p[2][0] - p[1][0];
+    y1 = p[2][1] - p[1][1];
+  } else {
+    x0 = p[2][0] - p[0][0];
+    y0 = p[2][1] - p[0][1];
+    x1 = p[3][0] - p[1][0];
+    y1 = p[3][1] - p[1][1];
+  }
+  double jac = 0.5 * (x0 * y1 - x1 * y0);
+  return jac;
 }
 
-void MeshRegion::GetFacePts(int index, std::vector<int> & pts) {
-    pts.clear();
-    if(m_cells.size()<=index) {
-        return;
+void MeshRegion::GetFacePts(int index, std::vector<int> &pts) {
+  pts.clear();
+  if (m_cells.size() <= index) {
+    return;
+  }
+  int ne = m_cells[index].size();
+  for (int i = 0; i < ne; ++i) {
+    int e0 = m_cells[index][i];
+    int e1 = m_cells[index][(i + 1) % ne];
+    if (m_edges[e0][0] == m_edges[e1][0] || m_edges[e0][0] == m_edges[e1][1]) {
+      pts.push_back(m_edges[e0][1]);
+    } else {
+      pts.push_back(m_edges[e0][0]);
     }
-    int ne = m_cells[index].size();
-    for(int i=0; i<ne; ++i) {
-        int e0 = m_cells[index][ i      ];
-        int e1 = m_cells[index][(i+1)%ne];
-        if(m_edges[e0][0] == m_edges[e1][0] || m_edges[e0][0] == m_edges[e1][1]) {
-            pts.push_back(m_edges[e0][1]);
-        } else {
-            pts.push_back(m_edges[e0][0]);
+  }
+}
+
+void MeshRegion::GetBoundBox(std::vector<double> &box) {
+  box.resize(6);
+  box[0] = std::numeric_limits<double>::max();
+  box[2] = std::numeric_limits<double>::max();
+  box[4] = std::numeric_limits<double>::max();
+  box[1] = std::numeric_limits<double>::lowest();
+  box[3] = std::numeric_limits<double>::lowest();
+  box[5] = std::numeric_limits<double>::lowest();
+  for (const auto &p : m_pts) {
+    for (size_t i = 0; i < p.size(); ++i) {
+      box[2 * i] = std::min(box[2 * i], p[i]);
+      box[2 * i + 1] = std::max(box[2 * i + 1], p[i]);
+    }
+  }
+}
+
+int MeshRegion::RemoveElements(void *ptsFunc) {
+  // loop through edges and empty points to be removed
+  bool (*ptsFunction)(std::vector<double>) =
+      (bool (*)(std::vector<double>))ptsFunc;
+  std::set<int> edgesToRemove;
+  for (size_t e = 0; e < m_edges.size(); ++e) {
+    for (const auto &p : m_edges[e]) {
+      if (m_pts[p].size() > 0 && ptsFunction(m_pts[p])) {
+        m_pts[p].resize(0);
+        edgesToRemove.insert(e);
+      } else if (m_pts[p].size() == 0) {
+        edgesToRemove.insert(e);
+      }
+    }
+  }
+  // remove points and build the new point index
+  std::map<int, int> ptsmap;
+  std::vector<std::vector<double>> oldpts = m_pts;
+  m_pts.clear();
+  for (size_t p = 0; p < oldpts.size(); ++p) {
+    if (oldpts[p].size()) {
+      ptsmap[p] = m_pts.size();
+      m_pts.push_back(oldpts[p]);
+    }
+  }
+  // remove edges and build the new edge index
+  std::map<int, int> edgemap;
+  std::vector<std::vector<int>> oldedge = m_edges;
+  m_edges.clear();
+  for (size_t e = 0; e < oldedge.size(); ++e) {
+    if (edgesToRemove.find(e) == edgesToRemove.end()) {
+      edgemap[e] = m_edges.size();
+      for (size_t i = 0; i < 2; ++i) {
+        if (ptsmap.find(oldedge[e][i]) == ptsmap.end()) {
+          std::cout << "error when removing points in RemoveElements"
+                    << std::endl;
         }
+        oldedge[e][i] = ptsmap[oldedge[e][i]];
+      }
+      m_edges.push_back(oldedge[e]);
     }
+  }
+  // remove cells
+  std::vector<std::vector<int>> oldcells = m_cells;
+  m_cells.clear();
+  for (size_t c = 0; c < oldcells.size(); ++c) {
+    bool keep = true;
+    for (auto e : oldcells[c]) {
+      if (edgesToRemove.find(e) != edgesToRemove.end()) {
+        keep = false;
+      }
+    }
+    if (keep) {
+      for (size_t e = 0; e < oldcells[c].size(); ++e) {
+        oldcells[c][e] = edgemap[oldcells[c][e]];
+      }
+      m_cells.push_back(oldcells[c]);
+    }
+  }
+  ResetBndPts();
+  rebuildEdgesIndex();
+  return oldcells.size() - m_cells.size();
 }

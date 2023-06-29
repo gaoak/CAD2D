@@ -39,8 +39,10 @@ public:
   std::vector<double> intersection(std::vector<double> l0,
                                    std::vector<double> l1);
   int ResetBndPts();
-  void CheckMesh(double angle = 75./180.*3.1415926);
+  void CheckMesh(double angle = 75. / 180. * 3.1415926);
   void FixMesh();
+  void GetBoundBox(std::vector<double> &box);
+  int RemoveElements(void *ptsFunc);
 
 private:
   int loadNode(std::ifstream &inxml, int N, char buffer[]);
@@ -49,7 +51,7 @@ private:
   int AddSplitElemens(std::vector<int> pts, double maxInnerAngle);
   void CalculateCosAngle(std::vector<int> pts, std::vector<double> &cangle,
                          int &maxc, int &minabs);
-  void GetFacePts(int index, std::vector<int> & pts);
+  void GetFacePts(int index, std::vector<int> &pts);
   double ElementArea(int index);
   std::map<int, int> m_pIDf2s;
 };
