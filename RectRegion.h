@@ -17,7 +17,9 @@ class RectRegion : public MeshRegion {
 public:
   RectRegion(std::vector<void *> edges, std::string name,
              bool connectivityCheck = true, double tolerance = 1.E-6,
-             int edgeAttractMesh = 0, double attractEps = 1.);
+             int edgeAttractMesh = 0,
+             double attractEps = 1.); // for boundary layer mesh,
+                                      // connectivityCheck needs to be false
   RectRegion(std::vector<std::vector<std::vector<double>>> edges,
              std::string name, bool connectivityCheck = true,
              double tolerance = 1.E-6, int edgeAttractMesh = 0,
