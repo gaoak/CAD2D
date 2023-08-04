@@ -118,3 +118,42 @@ void OutGeo(std::string filename, std::vector<std::vector<double>> outerbox,
   outgmsh << "Recombine Surface {" << index << "};\n";
   std::cout << "Output file " << filename << std::endl;
 }
+
+std::vector<double> intersect(std::vector<double> p0, std::vector<double> n0,
+                              std::vector<double> p1, std::vector<double> n1) {
+  std::vector<double> res(2, 1E38);
+  double jac = -n0[0] * n1[1] + n1[0] * n0[1];
+  if (fabs(jac) < 1E-38) {
+    return res;
+  }
+  double b0 = p1[0] - p0[0], b1 = p1[1] - p0[1];
+  jac = 1. / jac;
+  res[0] = jac * (-n1[1] * b0 + n1[0] * b1);
+  res[1] = jac * (-n0[1] * b0 + n0[0] * b1);
+  return res;
+}
+
+std::vector<double> AddVect(const double a1, const std::vector<double> &a,
+                            const double b1, const std::vector<double> &b) {
+  size_t n = std::min(a.size(), b.size());
+  std::vector<double> res(n);
+  for (size_t i = 0; i < n; ++i) {
+    res[i] = a1 * a[i] + b1 * b[i];
+  }
+  return res;
+}
+
+int findNlayers(double h, double q, double R, double m) {
+  int n = 0;
+  double len = 0;
+  double delta = h;
+  for (n = 1; n <= 1000000; ++n) {
+    if (delta >= m)
+      delta = m;
+    len += delta;
+    if (len >= R)
+      return n;
+    delta *= q;
+  }
+  return n;
+}

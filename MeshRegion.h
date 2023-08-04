@@ -43,6 +43,7 @@ public:
   void FixMesh();
   void GetBoundBox(std::vector<double> &box);
   int RemoveElements(void *ptsFunc);
+  std::vector<std::vector<int>> splitBoundaryPts(double angle);
 
 private:
   int loadNode(std::ifstream &inxml, int N, char buffer[]);
@@ -53,6 +54,8 @@ private:
                          int &maxc, int &minabs);
   void GetFacePts(int index, std::vector<int> &pts);
   double ElementArea(int index);
+  std::vector<std::vector<int>>
+  splitBoundaryPts(std::vector<std::vector<int>> &allbndpts, double angle);
   std::map<int, int> m_pIDf2s;
 };
 #endif // MESHREGION_H
