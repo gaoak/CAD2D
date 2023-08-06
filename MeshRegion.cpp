@@ -597,7 +597,7 @@ MeshRegion::splitBoundaryPts(std::vector<std::vector<int>> &allbndpts,
         split.push_back(i);
       }
     }
-    std::cout << "split size " << split.size() << std::endl;
+    // std::cout << "split size " << split.size() << std::endl;
     if (split.size() > 1) {
       for (int i = 0; i < split.size() - 1; ++i) {
         std::vector<int> bn;

@@ -17,7 +17,7 @@ public:
   int defineBoundary(void *edgeFun, int N, int bndID, int Ncurve = 2,
                      double AoA = 0., int direction = 1,
                      void *mapFun = nullptr);
-  int defineBoundary(std::vector<void *> edgeFuns,
+  int defineBoundary(std::map<int, void *> edgeFuns,
                      double angle = 10. / 180. * M_PI);
   int outCOMPO(std::string filename, std::vector<int> comps);
   void outOuterRegion(std::string filename,

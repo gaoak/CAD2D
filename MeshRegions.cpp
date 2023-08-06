@@ -421,22 +421,33 @@ int MeshRegions::defineBoundary(void *edgeFun, int N, int bndID, int Ncurve,
   return 0;
 }
 
-int MeshRegions::defineBoundary(std::vector<void *> edgeFuns, double angle) {
+// define boundary conditions by: 1, spit boundary based on angles; 2, each
+// condition function defines a boundary (only picking up one boundary uniquely)
+// can be call additively
+int MeshRegions::defineBoundary(std::map<int, void *> edgeFuns, double angle) {
   std::vector<std::vector<int>> allbndpts = splitBoundaryPts(angle);
-  std::set<int> defined;
-  int bndID = -1;
+  // reorder boundary points to ensure periodic boundary condition
+  for (auto &bnd : allbndpts) {
+    int ps = bnd[0], pe = bnd[bnd.size() - 1];
+    if (ps != pe) {
+      if ((m_pts[ps][0] > m_pts[pe][0] + 1E-6) ||
+          (fabs(m_pts[ps][0] - m_pts[pe][0]) < 1E-6 &&
+           m_pts[ps][1] > m_pts[pe][1] + 1E-6)) {
+        std::reverse(bnd.begin(), bnd.end());
+      }
+    }
+  }
+  std::set<int> defined; // boundary part that is already defined
   for (auto fun : edgeFuns) {
     bool (*condition)(std::vector<double> &) =
-        (bool (*)(std::vector<double> &))fun;
-    bool findedge = false;
+        (bool (*)(std::vector<double> &))(fun.second);
     for (int i = 0; i < allbndpts.size(); ++i) {
       if (defined.find(i) != defined.end())
         continue;
       for (int j = 0; j < allbndpts[i].size(); ++j) {
         if (condition(m_pts[allbndpts[i][j]])) {
-          if (!findedge) {
-            findedge = true;
-            ++bndID;
+          int bndID = fun.first;
+          if (m_boundary.find(bndID) == m_boundary.end()) {
             m_boundary[bndID] = std::vector<int>();
           }
           for (int k = 0; k < allbndpts[i].size(); ++k) {
@@ -448,6 +459,8 @@ int MeshRegions::defineBoundary(std::vector<void *> edgeFuns, double angle) {
               m_boundary[bndID].push_back(m_edgesIndex[es]);
             }
           }
+          // std::cout << "defined bnd " << bndID << "with elements " <<
+          // m_boundary[bndID].size() << std::endl;
           defined.insert(i);
           break;
         }
