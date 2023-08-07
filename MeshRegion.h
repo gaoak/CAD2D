@@ -33,6 +33,7 @@ public:
   std::vector<std::set<int>> m_unSharedPtsSet;
   std::map<std::set<int>, int> m_edgesIndex;
   bool consistancyCheck(MeshRegion m);
+  bool consistancyCheck(std::vector<std::vector<double>> &pts);
   void transform(std::vector<double> &p, double AoA);
   std::vector<double> getLineFromVertex(std::vector<double> A,
                                         std::vector<double> B);

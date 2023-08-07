@@ -259,6 +259,17 @@ bool MeshRegion::consistancyCheck(MeshRegion m) {
   return true;
 }
 
+bool MeshRegion::consistancyCheck(std::vector<std::vector<double>> &pts) {
+  if (m_bndPts.size() != pts.size())
+    return false;
+  int tmp;
+  for (auto p : pts) {
+    if (!pointIsExist(p, tmp))
+      return false;
+  }
+  return true;
+}
+
 void MeshRegion::sortCellFromQtoT() {
   std::vector<std::vector<int>> tmpcells;
   for (int i = 0; i < m_cells.size(); ++i) {
