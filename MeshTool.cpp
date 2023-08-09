@@ -111,9 +111,9 @@ int meshingBoundayLayer(MeshRegions &region, int Nslice, void *thickFunc,
     pic.MeshGen(1, e0.size() - 1);
     region.AddRegion(pic);
   }
-  region.outXml(name + ".xml");
-  std::vector<int> comp2;
-  comp2.push_back(0);
-  region.outCOMPO(name + ".xml", comp2);
+  //region.outXml(name + ".xml");
+  //std::vector<int> comp2;
+  //comp2.push_back(0);
+  //region.outCOMPO(name + ".xml", comp2);
   return 0;
 }

@@ -183,9 +183,9 @@ void MeshRegion::CalculateCosAngle(std::vector<int> pts,
     double xp1 = m_pts[pts[(i + 1) % n]][0];
     double yp1 = m_pts[pts[(i + 1) % n]][1];
     double nmx =
-        (x - xm1) / sqrt((x - xm1) * (x - xm1) + (y - ym1) * (y - ym1));
+        (xm1 - x) / sqrt((x - xm1) * (x - xm1) + (y - ym1) * (y - ym1));
     double nmy =
-        (y - ym1) / sqrt((x - xm1) * (x - xm1) + (y - ym1) * (y - ym1));
+        (ym1 - y) / sqrt((x - xm1) * (x - xm1) + (y - ym1) * (y - ym1));
     double npx =
         (xp1 - x) / sqrt((xp1 - x) * (xp1 - x) + (yp1 - y) * (yp1 - y));
     double npy =
@@ -212,7 +212,7 @@ int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
       cangle[minindex] < cos(maxInnerAngle)) {
     std::vector<int> p1;
     std::vector<int> p2;
-    for (int i = n - 1; i < n + 2; ++i) {
+    for (int i = 0; i < 3; ++i) {
       p1.push_back(pts[(minindex + i) % n]);
       p2.push_back(pts[(minindex + i + 2) % n]);
     }
@@ -225,7 +225,7 @@ int MeshRegion::AddSplitElemens(std::vector<int> pts, double maxInnerAngle) {
     std::vector<int> cell;
     n = ptsvec[i].size();
     CalculateCosAngle(ptsvec[i], cangle, minindex, minabsindex);
-    for (int j = minabsindex - 1 + n; j < n + n - 1 + minabsindex; ++j) {
+    for (int j = minabsindex; j < n + minabsindex; ++j) {
       std::set<int> p;
       std::vector<int> pv;
       p.insert(ptsvec[i][j % n]);
