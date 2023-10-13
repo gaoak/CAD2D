@@ -4,6 +4,7 @@
 #include <vector>
 class NACAmpxx {
 public:
+  NACAmpxx(std::vector<double> &params);
   NACAmpxx(double m, double p, double t);
   NACAmpxx(std::string name);
   std::vector<double> up(double x);
@@ -31,6 +32,25 @@ protected:
   double m_t;
   double m_rRoundTrailing;
   double m_xRoundTrailing;
+};
+
+class WedgeFoil {
+public:
+  WedgeFoil(std::vector<double> &params);
+  WedgeFoil(double D0, double D1, double D2);
+  std::vector<double> up(double x);
+  std::vector<double> down(double x);
+  double findx(double s, int up = 1);
+  double finds(double x, int up = 1);
+  std::vector<double> roundTrailingEdge(std::vector<double> &p0,
+                                        double eps = 1.E-8);
+  double roundTrailingSize();
+
+protected:
+  double m_LEDiameter;
+  double m_TEThich;
+  double m_theta; //polar angle of the tangency point betweent the leading-edge circule and the wedge, < 90 degrees
+  double m_LETangencyX; // 0.5 * m_LEDiameter + 0.5 * m_LEDiameter * cos(m_theta)
 };
 
 #endif

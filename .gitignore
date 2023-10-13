@@ -17,5 +17,7 @@ test*
 *bmp
 *jpg
 *swp
+*.m
+*.txt
 .vscode
 a.out
