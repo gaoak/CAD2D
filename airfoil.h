@@ -17,6 +17,7 @@ public:
   double Area(bool roundTrailingEdge = false);
 
 protected:
+  void InitAirfoil();
   double findx(double s, std::vector<std::vector<double>> &arc);
   double finds(double x, std::vector<std::vector<double>> &arc);
   double halfSt(double x);
@@ -50,10 +51,13 @@ public:
   double Area(bool roundTrailingEdge = false);
 
 protected:
+  void InitAirfoil();
   double m_LEDiameter;
   double m_TEThich;
-  double m_theta; //polar angle of the tangency point betweent the leading-edge circule and the wedge, < 90 degrees
-  double m_LETangencyX; // 0.5 * m_LEDiameter + 0.5 * m_LEDiameter * cos(m_theta)
+  double m_theta; // polar angle of the tangency point betweent the leading-edge
+                  // circule and the wedge, < 90 degrees
+  double
+      m_LETangencyX; // 0.5 * m_LEDiameter + 0.5 * m_LEDiameter * cos(m_theta)
 };
 
 #endif

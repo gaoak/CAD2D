@@ -5,7 +5,7 @@
 #include <vector>
 
 NACAmpxx::NACAmpxx(std::vector<double> &params) {
-  if(params.size()<3) {
+  if (params.size() < 3) {
     params.push_back(0.);
     params.push_back(0.);
     params.push_back(0.);
@@ -17,8 +17,7 @@ NACAmpxx::NACAmpxx(std::vector<double> &params) {
     m_p = 100.;
   }
   m_t = params[2];
-  calculateArcTable();
-  m_rRoundTrailing = -1.;
+  InitAirfoil();
 }
 
 NACAmpxx::NACAmpxx(double m, double p, double t) {
@@ -29,8 +28,7 @@ NACAmpxx::NACAmpxx(double m, double p, double t) {
     m_p = 100.;
   }
   m_t = t;
-  calculateArcTable();
-  m_rRoundTrailing = -1.;
+  InitAirfoil();
 }
 
 NACAmpxx::NACAmpxx(std::string name) {
@@ -45,6 +43,10 @@ NACAmpxx::NACAmpxx(std::string name) {
     m_m = 0.;
     m_p = 100.;
   }
+  InitAirfoil();
+}
+
+void NACAmpxx::InitAirfoil() {
   calculateArcTable();
   m_rRoundTrailing = -1.;
 }
@@ -103,8 +105,9 @@ double NACAmpxx::halfSt(double x) {
   for (int i = 1; i < 5; ++i)
     xs[i] = xs[i - 1] * x;
   return 5. * m_t *
-         (0.2969 * sqrt(x) * 2./3. - 0.1260 * xs[1] / 2. - 0.3516 * xs[2] / 3. + 0.2843 * xs[3] / 4. -
-          0.1015 * xs[4] / 5.) * x;
+         (0.2969 * sqrt(x) * 2. / 3. - 0.1260 * xs[1] / 2. -
+          0.3516 * xs[2] / 3. + 0.2843 * xs[3] / 4. - 0.1015 * xs[4] / 5.) *
+         x;
 }
 
 double NACAmpxx::halfdt(double x) {
@@ -126,7 +129,7 @@ double NACAmpxx::roundTrailingSize() {
 /***
  * remapping the points to a round trailing if the point lies on the airfoil
  * return the original point if it is not on the wall
-***/
+ ***/
 std::vector<double> NACAmpxx::roundTrailingEdge(std::vector<double> &p0,
                                                 double eps) {
   if (m_rRoundTrailing < 0.) {
@@ -232,7 +235,7 @@ double NACAmpxx::theta(double x) {
 /***
  * Construct a table of (x, s) for both upper and lower surfaces
  * s starts from 0 (leading edge) to the trailing edge
-***/
+ ***/
 void NACAmpxx::calculateArcTable() {
   double xmid = 0.1;
   int N0 = 1000;
@@ -302,10 +305,10 @@ void NACAmpxx::calculateArcTable() {
 
 double NACAmpxx::Area(bool roundTrailingEdge) {
   double res = 0.;
-  if(roundTrailingEdge) {
+  if (roundTrailingEdge) {
     double xinterc;
     double rt = calculateTrailingRadius(xinterc);
-    double theta = acos((rt - 1. + xinterc)/rt);
+    double theta = acos((rt - 1. + xinterc) / rt);
     res = halfSt(xinterc) * 2. + rt * rt * theta;
   } else {
     res = halfSt(1.) * 2.;
@@ -316,27 +319,31 @@ double NACAmpxx::Area(bool roundTrailingEdge) {
 WedgeFoil::WedgeFoil(std::vector<double> &params) {
   m_LEDiameter = params[0];
   m_TEThich = params[1];
-  double det = m_TEThich * m_TEThich + 4. * 1. * (1. - m_LEDiameter);
-  m_theta = 2. * atan(0.5*(m_TEThich + sqrt(det)));
-  m_LETangencyX = 0.5 * m_LEDiameter*(1. + cos(m_theta));
+  InitAirfoil();
 }
 
 WedgeFoil::WedgeFoil(double D0, double D1, double D2) {
   m_LEDiameter = D0;
   m_TEThich = D1;
+  InitAirfoil();
+}
+
+void WedgeFoil::InitAirfoil() {
   double det = m_TEThich * m_TEThich + 4. * 1. * (1. - m_LEDiameter);
-  m_theta = 2. * atan(0.5*(m_TEThich + sqrt(det)));
-  m_LETangencyX = 0.5 * m_LEDiameter*(1. + cos(m_theta));
+  m_theta = 2. * atan(0.5 * (m_TEThich + sqrt(det)));
+  m_LETangencyX = 0.5 * m_LEDiameter * (1. + cos(m_theta));
+  printf("Wedge-shape airfoil with Area (round trailing edge) %26.18f\n",
+         Area(true));
 }
 
 std::vector<double> WedgeFoil::up(double x) {
   double radius = 0.5 * m_LEDiameter;
   std::vector<double> res(2);
   res[0] = x;
-  if(x<m_LETangencyX) {
-    res[1] = sqrt(radius * radius - (x - radius)*(x - radius));
+  if (x < m_LETangencyX) {
+    res[1] = sqrt(radius * radius - (x - radius) * (x - radius));
   } else {
-    res[1] = 0.5 * m_TEThich - (x - 1.)/tan(m_theta);
+    res[1] = 0.5 * m_TEThich - (x - 1.) / tan(m_theta);
   }
   return res;
 }
@@ -345,10 +352,10 @@ std::vector<double> WedgeFoil::down(double x) {
   double radius = 0.5 * m_LEDiameter;
   std::vector<double> res(2);
   res[0] = x;
-  if(x<m_LETangencyX) {
-    res[1] = -sqrt(radius * radius - (x - radius)*(x - radius));
+  if (x < m_LETangencyX) {
+    res[1] = -sqrt(radius * radius - (x - radius) * (x - radius));
   } else {
-    res[1] = -0.5 * m_TEThich + (x - 1.)/tan(m_theta);
+    res[1] = -0.5 * m_TEThich + (x - 1.) / tan(m_theta);
   }
   return res;
 }
@@ -356,10 +363,10 @@ std::vector<double> WedgeFoil::down(double x) {
 double WedgeFoil::findx(double s, int up) {
   double radius = 0.5 * m_LEDiameter;
   double x, sinter = radius * (M_PI - m_theta);
-  if(s < sinter) {
+  if (s < sinter) {
     x = radius * (1 - cos(s / radius));
   } else {
-    x = m_LETangencyX + (s-sinter) * sin(m_theta);
+    x = m_LETangencyX + (s - sinter) * sin(m_theta);
   }
   return x;
 }
@@ -367,10 +374,10 @@ double WedgeFoil::findx(double s, int up) {
 double WedgeFoil::finds(double x, int up) {
   double radius = 0.5 * m_LEDiameter;
   double s;
-  if(x<m_LETangencyX) {
-    s = radius * (M_PI - acos((x - radius)/radius));
+  if (x < m_LETangencyX) {
+    s = radius * (M_PI - acos((x - radius) / radius));
   } else {
-    s = radius * m_theta + (x - m_LETangencyX)/sin(m_theta);
+    s = radius * m_theta + (x - m_LETangencyX) / sin(m_theta);
   }
   return s;
 }
@@ -378,17 +385,18 @@ double WedgeFoil::finds(double x, int up) {
 /***
  * remapping the points to a round trailing if the point lies on the airfoil
  * return the original point if it is not on the wall
-***/
+ ***/
 std::vector<double> WedgeFoil::roundTrailingEdge(std::vector<double> &p0,
-                                        double eps) {
+                                                 double eps) {
   double radius = roundTrailingSize();
   double xintercept = 1. - radius * (1 - cos(m_theta)), xcenter = 1. - radius;
   std::vector<double> res = p0;
-  if(p0[0] > xintercept && p0[0] <= 1.+eps) {
+  if (p0[0] > xintercept && p0[0] <= 1. + eps) {
     bool onwall = fabs(up(p0[0])[1] - fabs(p0[1])) <= eps;
-    if (fabs(1. - p0[0]) < eps && fabs(p0[1]) <= up(1.)[1] + eps) onwall = true;
-    if(onwall) {
-      double theta  = atan(p0[1] / (p0[0] - xcenter));
+    if (fabs(1. - p0[0]) < eps && fabs(p0[1]) <= up(1.)[1] + eps)
+      onwall = true;
+    if (onwall) {
+      double theta = atan(p0[1] / (p0[0] - xcenter));
       res[0] = xcenter + radius * cos(theta);
       res[1] = radius * sin(theta);
     }
@@ -404,10 +412,11 @@ double WedgeFoil::Area(bool roundTrailingEdge) {
   double rl = 0.5 * m_LEDiameter;
   double rt = roundTrailingSize();
   double res = (M_PI - m_theta) * rl * rl;
-  if(roundTrailingEdge) {
-    res += (rl+rt)*(1.-rl-rt)*sin(m_theta) + m_theta * rt * rt;
+  if (roundTrailingEdge) {
+    res += (rl + rt) * (1. - rl - rt) * sin(m_theta) + m_theta * rt * rt;
   } else {
-    res += rl * (1. - m_LETangencyX) / sin(m_theta) + 0.5 * m_TEThich * (1 - rl);
+    res +=
+        rl * (1. - m_LETangencyX) / sin(m_theta) + 0.5 * m_TEThich * (1 - rl);
   }
   return res;
 }
