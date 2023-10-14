@@ -97,6 +97,16 @@ double NACAmpxx::halft(double x) {
           0.1015 * xs[4]);
 }
 
+double NACAmpxx::halfSt(double x) {
+  x = fabs(x);
+  std::vector<double> xs(5, 1.);
+  for (int i = 1; i < 5; ++i)
+    xs[i] = xs[i - 1] * x;
+  return 5. * m_t *
+         (0.2969 * sqrt(x) * 2./3. - 0.1260 * xs[1] / 2. - 0.3516 * xs[2] / 3. + 0.2843 * xs[3] / 4. -
+          0.1015 * xs[4] / 5.) * x;
+}
+
 double NACAmpxx::halfdt(double x) {
   x = fabs(x);
   std::vector<double> xs(5, 1.);
@@ -290,6 +300,19 @@ void NACAmpxx::calculateArcTable() {
   }
 }
 
+double NACAmpxx::Area(bool roundTrailingEdge) {
+  double res = 0.;
+  if(roundTrailingEdge) {
+    double xinterc;
+    double rt = calculateTrailingRadius(xinterc);
+    double theta = acos((rt - 1. + xinterc)/rt);
+    res = halfSt(xinterc) * 2. + rt * rt * theta;
+  } else {
+    res = halfSt(1.) * 2.;
+  }
+  return res;
+}
+
 WedgeFoil::WedgeFoil(std::vector<double> &params) {
   m_LEDiameter = params[0];
   m_TEThich = params[1];
@@ -377,6 +400,18 @@ double WedgeFoil::roundTrailingSize() {
   return 0.5 * m_TEThich / tan(0.5 * m_theta);
 }
 
+double WedgeFoil::Area(bool roundTrailingEdge) {
+  double rl = 0.5 * m_LEDiameter;
+  double rt = roundTrailingSize();
+  double res = (M_PI - m_theta) * rl * rl;
+  if(roundTrailingEdge) {
+    res += (rl+rt)*(1.-rl-rt)*sin(m_theta) + m_theta * rt * rt;
+  } else {
+    res += rl * (1. - m_LETangencyX) / sin(m_theta) + 0.5 * m_TEThich * (1 - rl);
+  }
+  return res;
+}
+
 /*int main() {
     NACAmpxx airf("0012");
     double x;
@@ -390,4 +425,5 @@ airf.calculateTrailingRadius(x), 1.-airf.calculateTrailingRadius(x), x);
       std::vector<double> p = airf.up(x);
       printf("%20.12f %20.12f\n", p[0], p[1]);
     }
+    printf("Area %20.12f\n", airf.Area(true));
 }*/

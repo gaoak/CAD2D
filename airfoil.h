@@ -14,10 +14,12 @@ public:
   std::vector<double> roundTrailingEdge(std::vector<double> &p0,
                                         double eps = 1.E-8);
   double roundTrailingSize();
+  double Area(bool roundTrailingEdge = false);
 
 protected:
   double findx(double s, std::vector<std::vector<double>> &arc);
   double finds(double x, std::vector<std::vector<double>> &arc);
+  double halfSt(double x);
   double halft(double x);
   double halfdt(double x);
   double chamber(double x);
@@ -45,6 +47,7 @@ public:
   std::vector<double> roundTrailingEdge(std::vector<double> &p0,
                                         double eps = 1.E-8);
   double roundTrailingSize();
+  double Area(bool roundTrailingEdge = false);
 
 protected:
   double m_LEDiameter;
