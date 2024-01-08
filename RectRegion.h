@@ -38,6 +38,7 @@ public:
   std::vector<std::vector<double>> m_vertex;
   std::vector<double> getVertex(int i);
   std::vector<double> getVertexOffset(int i);
+  void SetEdgesDirec(std::vector<int> &dirs);
 
 private:
   EdgeType m_edgeType;

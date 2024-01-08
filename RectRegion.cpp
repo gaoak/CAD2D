@@ -90,6 +90,12 @@ std::vector<double> RectRegion::EvaluateEdgePts(int i, double s) {
   }
 }
 
+void RectRegion::SetEdgesDirec(std::vector<int> &dirs) {
+  for (size_t i = 0; i < dirs.size() && i < m_edgesDirec.size(); ++i) {
+    m_edgesDirec[i] = dirs[i];
+  }
+}
+
 int RectRegion::CheckConnectivity() {
   std::vector<double> s1s = {1., 1., -1., -1.};
   std::vector<double> p10, p11, p20, p21;
