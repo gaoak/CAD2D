@@ -3,7 +3,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <map>
+#include <limits>
 #include <string>
 
 double distance(std::vector<double> p0, std::vector<double> p1) {
@@ -156,4 +156,115 @@ int findNlayers(double h, double q, double R, double m) {
     delta *= q;
   }
   return n;
+}
+
+// relation :A in C in D; B in C in D
+// [A; empty]
+// [B; empty]
+// [C; A, B];
+// [D, C];
+void BuildTopoTree(std::vector<std::vector<std::vector<double>>> &pts,
+                   std::map<int, std::set<int>> &trees, std::set<int> &roots) {
+  trees.clear();
+  roots.clear();
+  std::vector<std::vector<double>> boxes;
+  for (size_t i = 0; i < pts.size(); ++i) {
+    boxes.push_back(GetBoundingBox(pts[i]));
+  }
+  // buid the relation tree
+  for (size_t p = 0; p < pts.size(); ++p) {
+    trees[p] = std::set<int>();
+  }
+  std::set<int> sons;
+  for (size_t p0 = 0; p0 + 1 < pts.size(); ++p0) {
+    for (size_t p1 = p0 + 1; p1 < pts.size(); ++p1) {
+      int r = FindRelationByBoundBox(boxes[p0], boxes[p1]);
+      if (r == 1) {
+        trees[p0].insert(p1);
+        sons.insert(p1);
+      } else if (r == -1) {
+        trees[p1].insert(p0);
+        sons.insert(p0);
+      }
+    }
+  }
+  // trim the tree
+  std::map<int, std::set<int>> toremove;
+  for (size_t p = 0; p < trees.size(); ++p) {
+    std::vector<int> list(trees[p].begin(), trees[p].end());
+    std::set<int> rm;
+    for (size_t i1 = 0; i1 + 1 < list.size(); ++i1) {
+      for (size_t i2 = i1 + 1; i2 < list.size(); ++i2) {
+        if (trees[list[i2]].find(list[i1]) != trees[list[i2]].end()) {
+          rm.insert(list[i1]);
+        } else if (trees[list[i1]].find(list[i2]) != trees[list[i1]].end()) {
+          rm.insert(list[i2]);
+        }
+      }
+    }
+    toremove[p] = rm;
+  }
+  for (size_t p = 0; p < trees.size(); ++p) {
+    if (sons.find(p) == sons.end()) {
+      roots.insert(p);
+    }
+    for (auto p1 : toremove[p]) {
+      trees[p].erase(p1);
+    }
+  }
+}
+
+// 1, 0 contains 1; -1, 1 contains 0; 0 overlap; 2, no contact.
+int FindRelationByBoundBox(std::vector<double> &box0,
+                           std::vector<double> &box1) {
+  int dim = (int)box0.size() / 2;
+  int sum = 0;
+  for (int i = 0; i < dim; ++i) {
+    if (box0[2 * i] < box1[2 * i] && box1[2 * i + 1] < box0[2 * i + 1]) {
+      sum += 1;
+    } else if (box1[2 * i] < box0[2 * i] && box0[2 * i + 1] < box1[2 * i + 1]) {
+      sum -= 1;
+    } else if (box0[2 * i + 1] < box1[2 * i] || box1[2 * i + 1] < box0[2 * i]) {
+      return 2;
+    }
+  }
+  if (sum == dim) {
+    return 1;
+  } else if (sum == -dim) {
+    return -1;
+  } else {
+    return 0; // to do improve this using Argz check
+  }
+}
+
+std::vector<double> GetBoundingBox(std::vector<std::vector<double>> &pts) {
+  std::vector<double> res;
+  if (pts.size() == 0) {
+    return res;
+  }
+  size_t dim = pts[0].size();
+  res.resize(2 * dim);
+  for (size_t i = 0; i < dim; ++i) {
+    res[2 * i] = std::numeric_limits<double>::max();
+    res[2 * i + 1] = std::numeric_limits<double>::lowest();
+  }
+  for (auto &p : pts) {
+    for (size_t i = 0; i < dim; ++i) {
+      if (res[2 * i] > p[i]) {
+        res[2 * i] = p[i];
+      }
+      if (res[2 * i + 1] < p[i]) {
+        res[2 * i + 1] = p[i];
+      }
+    }
+  }
+  return res;
+}
+
+void FindTreesDepths(int root, int lroot, std::map<int, std::set<int>> &trees,
+                     std::vector<int> &levels) {
+  levels[root] = lroot;
+  for (auto p : trees[root]) {
+    FindTreesDepths(p, 1 + lroot, trees, levels);
+  }
 }
