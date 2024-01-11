@@ -83,11 +83,12 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
     ds = ds0;
     m_discretes = std::vector<double>(m_N + 1, -1.);
     for (int i = 1; i <= m_nBLayers0; ++i) {
-      m_discretes[i] = m_discretes[i - 1] + ds;
-      ds *= m_q0;
-      if (ds > (1. - m_discretes[i]) / (m_N - i)) {
-        m_nBLayers0 = i;
+      if (ds > (1. - m_discretes[i - 1]) / (m_N - i + 1)) {
+        m_nBLayers0 = i - 1;
         break;
+      } else {
+        m_discretes[i] = m_discretes[i - 1] + ds;
+        ds *= m_q0;
       }
     }
     ds = (1. - m_discretes[m_nBLayers0]) / (m_N - m_nBLayers0);
@@ -99,11 +100,12 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
     ds = ds1;
     m_discretes = std::vector<double>(m_N + 1, 1.);
     for (int i = 1; i <= m_nBLayers1; ++i) {
-      m_discretes[m_N - i] = m_discretes[m_N - i + 1] - ds;
-      ds *= m_q1;
-      if (ds > (1. + m_discretes[m_N - i]) / (m_N - i)) {
-        m_nBLayers1 = i;
+      if (ds > (1. + m_discretes[m_N - i + 1]) / (m_N - i + 1)) {
+        m_nBLayers1 = i - 1;
         break;
+      } else {
+        m_discretes[m_N - i] = m_discretes[m_N - i + 1] - ds;
+        ds *= m_q1;
       }
     }
     ds = (1. + m_discretes[m_N - m_nBLayers1]) / (m_N - m_nBLayers1);
@@ -116,20 +118,23 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
     m_discretes[m_N] = 1.;
     ds = ds0;
     for (int i = 1; i <= m_nBLayers0; ++i) {
-      m_discretes[i] = m_discretes[i - 1] + ds;
-      ds *= m_q0;
-      if (ds > (1. - m_discretes[i]) / (m_N - i)) {
-        m_nBLayers0 = i;
+      if (ds > (1. - m_discretes[i - 1]) / (m_N - i + 1)) {
+        m_nBLayers0 = i - 1;
         break;
+      } else {
+        m_discretes[i] = m_discretes[i - 1] + ds;
+        ds *= m_q0;
       }
     }
     ds = ds1;
     for (int i = 1; i <= m_nBLayers1; ++i) {
-      m_discretes[m_N - i] = m_discretes[m_N - i + 1] - ds;
-      ds *= m_q1;
-      if (ds > (m_discretes[m_N - i] - m_discretes[m_nBLayers0]) / (m_N - i)) {
-        m_nBLayers1 = i;
+      if (ds > (m_discretes[m_N - i + 1] - m_discretes[m_nBLayers0]) /
+                   (m_N - i + 1)) {
+        m_nBLayers1 = i - 1;
         break;
+      } else {
+        m_discretes[m_N - i] = m_discretes[m_N - i + 1] - ds;
+        ds *= m_q1;
       }
     }
     ds = (m_discretes[m_N - m_nBLayers1] - m_discretes[m_nBLayers0]) /
