@@ -7,34 +7,35 @@ static struct {
   double hFirstLayer;
   double progress;
   double maxLayerh;
+  std::vector<std::vector<double>> reses;
 } BLlayer;
 
 void setRadiusMesh(double h, double p, double m) {
   BLlayer.hFirstLayer = h;
   BLlayer.progress = p;
   BLlayer.maxLayerh = m;
+  BLlayer.reses.clear();
 }
 
 void setRadiusLayers(int n) { BLlayer.nLayers = n; }
 
 std::vector<double> radiusEdge(double s) {
   int n = round(0.5 * (1. + s) * BLlayer.nLayers);
-  static std::vector<std::vector<double>> reses;
-  if (reses.size() < BLlayer.nLayers + 1) {
-    reses.clear();
+  if (BLlayer.reses.size() < BLlayer.nLayers + 1) {
+    BLlayer.reses.clear();
     std::vector<double> p0(2, 0.);
-    reses.push_back(p0);
+    BLlayer.reses.push_back(p0);
     double delta = BLlayer.hFirstLayer;
     for (int n = 1; n <= BLlayer.nLayers; ++n) {
       std::vector<double> p1(2, 0.);
       if (delta >= BLlayer.maxLayerh)
         delta = BLlayer.maxLayerh;
-      p1[0] = reses[reses.size() - 1][0] + delta;
+      p1[0] = BLlayer.reses[BLlayer.reses.size() - 1][0] + delta;
       delta *= BLlayer.progress;
-      reses.push_back(p1);
+      BLlayer.reses.push_back(p1);
     }
   }
-  return reses[n];
+  return BLlayer.reses[n];
 }
 
 int meshingBoundayLayer(MeshRegions &region, int Nslice, void *thickFunc,
