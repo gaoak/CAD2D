@@ -153,7 +153,7 @@ int MeshRegions::outCOMPO(std::string filename, std::vector<int> compsi) {
       ++bndIDMax;
     }
   }
-  if (bndEdgeNumber != m_allBoundaryEdges.size()) {
+  if (bndEdgeNumber != m_allBoundaryEdges.size() && allbndEdges.size()) {
     std::cout << "warning: in region " << m_name
               << ", boudnary condition incomplete C[" << bndIDMax << "]"
               << std::endl;
