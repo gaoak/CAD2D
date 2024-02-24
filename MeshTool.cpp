@@ -112,9 +112,40 @@ int meshingBoundayLayer(MeshRegions &region, int Nslice, void *thickFunc,
     pic.MeshGen(1, e0.size() - 1);
     region.AddRegion(pic);
   }
-  //region.outXml(name + ".xml");
-  //std::vector<int> comp2;
-  //comp2.push_back(0);
-  //region.outCOMPO(name + ".xml", comp2);
+  // region.outXml(name + ".xml");
+  // std::vector<int> comp2;
+  // comp2.push_back(0);
+  // region.outCOMPO(name + ".xml", comp2);
+  return 0;
+}
+
+int outputGeo(MeshRegions &combinedReg, std::vector<int> OutLevels) {
+  // outer layer
+  std::vector<std::vector<int>> boundary = combinedReg.extractBoundaryPoints();
+  std::vector<std::vector<std::vector<double>>> boxes(boundary.size());
+  for (int i = 0; i < boundary.size(); ++i) {
+    for (int j = 0; j < boundary[i].size(); ++j) {
+      boxes[i].push_back(combinedReg.m_pts[boundary[i][j]]);
+    }
+  }
+  std::map<int, std::set<int>> trees;
+  std::set<int> roots;
+  BuildTopoTree(boxes, trees, roots);
+  std::vector<int> levels(boxes.size(), 0);
+  int r0 = *roots.begin();
+  FindTreesDepths(r0, 0, trees, levels);
+  int filen = 0;
+  for (auto l : OutLevels) {
+    for (size_t i = 0; i < levels.size(); ++i) {
+      if (l == levels[i]) {
+        std::vector<std::vector<std::vector<double>>> tmparray;
+        for (auto p : trees[i]) {
+          tmparray.push_back(boxes[p]);
+        }
+        OutGeo("FarField" + std::to_string(filen) + ".geo", boxes[i], tmparray);
+        ++filen;
+      }
+    }
+  }
   return 0;
 }

@@ -8,4 +8,5 @@ void setRadiusLayers(int n);
 int meshingBoundayLayer(MeshRegions &region, int Nx, void *thickFunc,
                         void *edges, std::string name,
                         std::vector<std::vector<double>> trimnorm);
+int outputGeo(MeshRegions &combinedReg, std::vector<int> OutLevels);
 #endif
