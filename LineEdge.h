@@ -18,6 +18,7 @@
 
 class LineEdge {
 public:
+  LineEdge() {}
   LineEdge(double *p0, double *p1, int N, int refineType, double h0, double h1);
   LineEdge(double *p0, double *p1, int N, int refineType, double h0, double q0,
            int NBlayers0, double h1, double q1, int NBlayers1);
