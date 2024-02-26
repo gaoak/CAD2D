@@ -158,6 +158,7 @@ int FlatPlate::MeshGen(MeshRegions &combinedReg, std::vector<void *> &BLedge) {
   for (unsigned int i = 0; i < Rects.size(); ++i) {
     combinedReg.AddRegion(Rects[i]);
   }
+  TransformMesh(combinedReg);
   return 0;
 }
 
@@ -186,7 +187,7 @@ std::vector<double> FlatPlate::edge0(double s) {
   std::vector<double> res(2, 0.);
   res[0] = x0 + radius * cos(t);
   res[1] = radius * sin(t);
-  return res;
+  return Transform(res);
 }
 std::vector<double> FlatPlate::edge1(double s) {
   double x0 = 0.5 * p["Thickness"], radius = 0.5 * p["Thickness"];
@@ -194,7 +195,7 @@ std::vector<double> FlatPlate::edge1(double s) {
   std::vector<double> res(2, 0.);
   res[0] = x0 + radius * cos(t);
   res[1] = radius * sin(t);
-  return res;
+  return Transform(res);
 }
 // trailing edge half circule
 std::vector<double> FlatPlate::edge2(double s) {
@@ -204,7 +205,7 @@ std::vector<double> FlatPlate::edge2(double s) {
   std::vector<double> res(2, 0.);
   res[0] = x0 + radius * cos(t);
   res[1] = radius * sin(t);
-  return res;
+  return Transform(res);
 }
 std::vector<double> FlatPlate::edge3(double s) {
   double x0 = p["ChordLen"] - 0.5 * p["Thickness"],
@@ -213,15 +214,31 @@ std::vector<double> FlatPlate::edge3(double s) {
   std::vector<double> res(2, 0.);
   res[0] = x0 + radius * cos(t);
   res[1] = radius * sin(t);
-  return res;
+  return Transform(res);
 }
 // upper surface
-std::vector<double> FlatPlate::edge4(double s) { return Cedge01.Evaluate(s); }
-std::vector<double> FlatPlate::edge5(double s) { return Cedge12.Evaluate(s); }
-std::vector<double> FlatPlate::edge6(double s) { return Cedge23.Evaluate(s); }
-std::vector<double> FlatPlate::edge7(double s) { return Cedge34.Evaluate(s); }
+std::vector<double> FlatPlate::edge4(double s) {
+  return Transform(Cedge01.Evaluate(s));
+}
+std::vector<double> FlatPlate::edge5(double s) {
+  return Transform(Cedge12.Evaluate(s));
+}
+std::vector<double> FlatPlate::edge6(double s) {
+  return Transform(Cedge23.Evaluate(s));
+}
+std::vector<double> FlatPlate::edge7(double s) {
+  return Transform(Cedge34.Evaluate(s));
+}
 // lower surface
-std::vector<double> FlatPlate::edge8(double s) { return Cedge67.Evaluate(s); }
-std::vector<double> FlatPlate::edge9(double s) { return Cedge78.Evaluate(s); }
-std::vector<double> FlatPlate::edge10(double s) { return Cedge89.Evaluate(s); }
-std::vector<double> FlatPlate::edge11(double s) { return Cedge910.Evaluate(s); }
+std::vector<double> FlatPlate::edge8(double s) {
+  return Transform(Cedge67.Evaluate(s));
+}
+std::vector<double> FlatPlate::edge9(double s) {
+  return Transform(Cedge78.Evaluate(s));
+}
+std::vector<double> FlatPlate::edge10(double s) {
+  return Transform(Cedge89.Evaluate(s));
+}
+std::vector<double> FlatPlate::edge11(double s) {
+  return Transform(Cedge910.Evaluate(s));
+}

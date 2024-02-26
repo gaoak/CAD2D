@@ -62,5 +62,14 @@ public:
   }
   std::map<std::string, double> p;
   std::map<std::string, int> q;
+  std::vector<double> Transform(std::vector<double> pt) {
+    double x = pt[0], y = pt[1];
+    pt[0] = x * cos(p["AoA"]) + y * sin(p["AoA"]) + p["Tx0"];
+    pt[1] = -x * sin(p["AoA"]) + y * cos(p["AoA"]) + p["Ty0"];
+    return pt;
+  }
+  void TransformMesh(MeshRegions &combinedReg) {
+    combinedReg.transformation(p["AoA"], p["Tx0"], p["Ty0"]);
+  }
 };
 #endif

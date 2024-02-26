@@ -21,7 +21,7 @@ public:
   std::vector<std::vector<int>> m_edges;
   std::vector<std::vector<int>> m_cells;
   int getCellsNumber();
-  void transformation(double AoA);
+  void transformation(double AoA, double x0, double y0);
   void sortCellFromQtoT();
   int loadFromMsh(std::string filename,
                   double maxInnerAngle = 2.35619449019234);
@@ -34,7 +34,7 @@ public:
   std::map<std::set<int>, int> m_edgesIndex;
   bool consistancyCheck(MeshRegion m);
   bool consistancyCheck(std::vector<std::vector<double>> &pts);
-  void transform(std::vector<double> &p, double AoA);
+  void transform(std::vector<double> &p, double AoA, double x0, double y0);
   std::vector<double> getLineFromVertex(std::vector<double> A,
                                         std::vector<double> B);
   std::vector<double> intersection(std::vector<double> l0,

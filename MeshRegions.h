@@ -15,8 +15,7 @@ public:
   int AddRegion(const MeshRegion &region, std::set<int> &excludePts);
   int outXml(std::string filename);
   int defineBoundary(void *edgeFun, int N, int bndID, int Ncurve = 2,
-                     double AoA = 0., int direction = 1,
-                     void *mapFun = nullptr);
+                     int direction = 1, void *mapFun = nullptr);
   int defineBoundary(std::map<int, void *> edgeFuns,
                      double angle = 10. / 180. * M_PI);
   int outCOMPO(std::string filename, std::vector<int> comps);

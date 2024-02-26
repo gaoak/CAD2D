@@ -44,16 +44,17 @@ MeshRegion::MeshRegion(std::string name, std::vector<std::vector<double>> &p,
   ResetBndPts();
 }
 
-void MeshRegion::transform(std::vector<double> &p, double AoA) {
+void MeshRegion::transform(std::vector<double> &p, double AoA, double x0,
+                           double y0) {
   double x = p[0], y = p[1];
-  p[0] = x * cos(AoA) + y * sin(AoA);
-  p[1] = -x * sin(AoA) + y * cos(AoA);
+  p[0] = x * cos(AoA) + y * sin(AoA) + x0;
+  p[1] = -x * sin(AoA) + y * cos(AoA) + y0;
 }
 
-void MeshRegion::transformation(double AoA) {
+void MeshRegion::transformation(double AoA, double x0, double y0) {
   for (int i = 0; i < m_pts.size(); ++i) {
     std::vector<double> p = m_pts[i];
-    transform(p, AoA);
+    transform(p, AoA, x0, y0);
     m_pts[i][0] = p[0];
     m_pts[i][1] = p[1];
   }

@@ -346,7 +346,7 @@ int MeshRegions::RemapPts(void *mapFun) {
 }
 
 int MeshRegions::defineBoundary(void *edgeFun, int N, int bndID, int Ncurve,
-                                double AoA, int direction, void *mapFun) {
+                                int direction, void *mapFun) {
   std::vector<double> (*edgeFunction)(double) =
       (std::vector<double>(*)(double))edgeFun;
   std::vector<double> (*mapFunction)(std::vector<double>) =
@@ -366,8 +366,6 @@ int MeshRegions::defineBoundary(void *edgeFun, int N, int bndID, int Ncurve,
       p0 = mapFunction(p0);
       p1 = mapFunction(p1);
     }
-    transform(p0, AoA);
-    transform(p1, AoA);
     int id0, id1;
     if (!pointIsExist(p0, id0) || !pointIsExist(p1, id1)) {
       std::cout << "error points 0(" << p0[0] << "," << p0[1]
@@ -406,7 +404,6 @@ int MeshRegions::defineBoundary(void *edgeFun, int N, int bndID, int Ncurve,
         if (mapFun) {
           pt = mapFunction(pt);
         }
-        transform(pt, AoA);
         points.push_back(pt[0]);
         points.push_back(pt[1]);
         points.push_back(0.);
