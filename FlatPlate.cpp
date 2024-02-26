@@ -158,7 +158,6 @@ int FlatPlate::MeshGen(MeshRegions &combinedReg, std::vector<void *> &BLedge) {
   for (unsigned int i = 0; i < Rects.size(); ++i) {
     combinedReg.AddRegion(Rects[i]);
   }
-  TransformMesh(combinedReg);
   return 0;
 }
 
