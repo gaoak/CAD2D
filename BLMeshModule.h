@@ -60,6 +60,7 @@ public:
   virtual std::vector<double> edge12(double s) {
     return std::vector<double>(3, 0.);
   }
+  virtual std::vector<double> MapFunc(std::vector<double> p) { return p; }
   std::map<std::string, double> p;
   std::map<std::string, int> q;
   std::vector<double> Transform(std::vector<double> pt) {

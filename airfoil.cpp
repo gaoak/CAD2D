@@ -4,23 +4,19 @@
 #include <iostream>
 #include <vector>
 
-NACAmpxx::NACAmpxx(std::vector<double> &params) {
-  if (params.size() < 3) {
-    params.push_back(0.);
-    params.push_back(0.);
-    params.push_back(0.);
-  }
-  m_m = params[0];
-  m_p = params[1];
+NACAmpxx::NACAmpxx(std::map<std::string, double> params) {
+  m_m = params["Chamber"];
+  m_p = params["MaxChamberX"];
   if (m_m < 0.001) {
     m_m = 0.;
     m_p = 100.;
   }
-  m_t = params[2];
+  m_t = params["Thickness"];
+  m_isRoundTrailing = params["RoundTE"] >= 0.5;
   InitAirfoil();
 }
 
-NACAmpxx::NACAmpxx(double m, double p, double t) {
+NACAmpxx::NACAmpxx(double m, double p, double t, bool roundtrailing) {
   m_m = m;
   m_p = p;
   if (m_m < 0.001) {
@@ -28,6 +24,7 @@ NACAmpxx::NACAmpxx(double m, double p, double t) {
     m_p = 100.;
   }
   m_t = t;
+  m_isRoundTrailing = roundtrailing;
   InitAirfoil();
 }
 
@@ -39,6 +36,11 @@ NACAmpxx::NACAmpxx(std::string name) {
   m_m = (name[0] - '0') * 0.01;
   m_p = (name[1] - '0') * 0.1;
   m_t = (name[2] - '0') * 0.1 + (name[3] - '0') * 0.01;
+  if (name.size() >= 4 && name[3] == 'r') {
+    m_isRoundTrailing = true;
+  } else {
+    m_isRoundTrailing = false;
+  }
   if (m_m < 0.001) {
     m_m = 0.;
     m_p = 100.;
@@ -51,15 +53,15 @@ void NACAmpxx::InitAirfoil() {
   m_rRoundTrailing = -1.;
 }
 
-double NACAmpxx::findx(double s, int surf) {
+double NACAmpxx::Findx(double s, int surf) {
   if (surf > 0) {
-    return findx(s, m_arcu);
+    return Findx(s, m_arcu);
   } else {
-    return findx(s, m_arcd);
+    return Findx(s, m_arcd);
   }
 }
 
-double NACAmpxx::findx(double s, std::vector<std::vector<double>> &arc) {
+double NACAmpxx::Findx(double s, std::vector<std::vector<double>> &arc) {
   s = fabs(s);
   if (s >= arc[arc.size() - 1][1])
     return 1.;
@@ -70,15 +72,15 @@ double NACAmpxx::findx(double s, std::vector<std::vector<double>> &arc) {
                              (arc[i][1] - arc[i - 1][1]);
 }
 
-double NACAmpxx::finds(double x, int surf) {
+double NACAmpxx::Finds(double x, int surf) {
   if (surf > 0) {
-    return finds(x, m_arcu);
+    return Finds(x, m_arcu);
   } else {
-    return finds(x, m_arcd);
+    return Finds(x, m_arcd);
   }
 }
 
-double NACAmpxx::finds(double x, std::vector<std::vector<double>> &arc) {
+double NACAmpxx::Finds(double x, std::vector<std::vector<double>> &arc) {
   x = fabs(x);
   if (x >= 1.)
     return arc[arc.size() - 1][1];
@@ -124,6 +126,17 @@ double NACAmpxx::roundTrailingSize() {
   double x;
   calculateTrailingRadius(x);
   return 1. - x;
+}
+
+void NACAmpxx::GetInfo(std::map<std::string, double> &p) {
+  if (m_isRoundTrailing) {
+    if (m_rRoundTrailing < 0.) {
+      m_rRoundTrailing = calculateTrailingRadius(m_xRoundTrailing);
+    }
+    p["TERadius"] = m_rRoundTrailing;
+    p["TEInterX"] = m_xRoundTrailing;
+  }
+  p["Area"] = Area();
 }
 
 /***
@@ -194,7 +207,7 @@ double NACAmpxx::chamber(double x) {
   return yc;
 }
 
-std::vector<double> NACAmpxx::up(double x) {
+std::vector<double> NACAmpxx::Upper(double x) {
   std::vector<double> res(2);
   if (x > 1.)
     x = 1.;
@@ -205,10 +218,13 @@ std::vector<double> NACAmpxx::up(double x) {
   double the = theta(x);
   res[0] = x - yt * sin(the);
   res[1] = yc + yt * cos(the);
+  if (m_isRoundTrailing) {
+    res = roundTrailingEdge(res);
+  }
   return res;
 }
 
-std::vector<double> NACAmpxx::down(double x) {
+std::vector<double> NACAmpxx::Lower(double x) {
   std::vector<double> res(2);
   if (x > 1.)
     x = 1.;
@@ -219,6 +235,9 @@ std::vector<double> NACAmpxx::down(double x) {
   double the = theta(x);
   res[0] = x + yt * sin(the);
   res[1] = yc - yt * cos(the);
+  if (m_isRoundTrailing) {
+    res = roundTrailingEdge(res);
+  }
   return res;
 }
 
@@ -248,7 +267,7 @@ void NACAmpxx::calculateArcTable() {
   double x, dx = xmid / N0 / 10., arcl = 0.;
   for (int i = 1; i <= 10 * N0; ++i) {
     x = dx * i;
-    std::vector<double> p1 = up(x);
+    std::vector<double> p1 = Upper(x);
     arcl += distance(p0, p1);
     if (i % 10 == 0) {
       std::vector<double> tmp1(2);
@@ -261,7 +280,7 @@ void NACAmpxx::calculateArcTable() {
   dx = (1. - xmid) / N1;
   for (int i = 1; i <= N1; ++i) {
     x = dx * i + xmid;
-    std::vector<double> p1 = up(x);
+    std::vector<double> p1 = Upper(x);
     arcl += distance(p0, p1);
     if (1) {
       std::vector<double> tmp1(2);
@@ -278,7 +297,7 @@ void NACAmpxx::calculateArcTable() {
   p0[1] = 0.;
   for (int i = 1; i <= 10 * N0; ++i) {
     x = dx * i;
-    std::vector<double> p1 = down(x);
+    std::vector<double> p1 = Lower(x);
     arcl += distance(p0, p1);
     if (i % 10 == 0) {
       std::vector<double> tmp1(2);
@@ -291,7 +310,7 @@ void NACAmpxx::calculateArcTable() {
   dx = (1. - xmid) / N1;
   for (int i = 1; i <= N1; ++i) {
     x = dx * i + xmid;
-    std::vector<double> p1 = down(x);
+    std::vector<double> p1 = Lower(x);
     arcl += distance(p0, p1);
     if (1) {
       std::vector<double> tmp1(2);
@@ -303,9 +322,9 @@ void NACAmpxx::calculateArcTable() {
   }
 }
 
-double NACAmpxx::Area(bool roundTrailingEdge) {
+double NACAmpxx::Area() {
   double res = 0.;
-  if (roundTrailingEdge) {
+  if (m_isRoundTrailing) {
     double xinterc;
     double rt = calculateTrailingRadius(xinterc);
     double theta = acos((rt - 1. + xinterc) / rt);
@@ -316,13 +335,14 @@ double NACAmpxx::Area(bool roundTrailingEdge) {
   return res;
 }
 
-WedgeFoil::WedgeFoil(std::vector<double> &params) {
-  m_LEDiameter = params[0];
-  m_TEThich = params[1];
+WedgeFoil::WedgeFoil(std::map<std::string, double> params) {
+  m_LEDiameter = params["Thickness"];
+  m_TEThich = params["TEThickness"];
+  m_isRoundTrailing = params["RoundTE"] >= 0.5;
   InitAirfoil();
 }
 
-WedgeFoil::WedgeFoil(double D0, double D1, double D2) {
+WedgeFoil::WedgeFoil(double D0, double D1, double D2, bool roundtrailing) {
   m_LEDiameter = D0;
   m_TEThich = D1;
   InitAirfoil();
@@ -333,10 +353,22 @@ void WedgeFoil::InitAirfoil() {
   m_theta = 2. * atan(0.5 * (m_TEThich + sqrt(det)));
   m_LETangencyX = 0.5 * m_LEDiameter * (1. + cos(m_theta));
   printf("Wedge-shape airfoil with Area (round trailing edge) %26.18f\n",
-         Area(true));
+         Area());
 }
 
-std::vector<double> WedgeFoil::up(double x) {
+void WedgeFoil::GetInfo(std::map<std::string, double> &p) {
+  p["LERadius"] = m_LEDiameter * 0.5;
+  p["LEInterX"] = m_LETangencyX;
+  if (m_isRoundTrailing) {
+    double radius = roundTrailingSize();
+    p["TERadius"] = radius;
+    double xintercept = 1. - radius * (1 - cos(m_theta)), xcenter = 1. - radius;
+    p["TEInterX"] = xintercept;
+  }
+  p["Area"] = Area();
+}
+
+std::vector<double> WedgeFoil::Upper(double x) {
   double radius = 0.5 * m_LEDiameter;
   std::vector<double> res(2);
   res[0] = x;
@@ -345,10 +377,13 @@ std::vector<double> WedgeFoil::up(double x) {
   } else {
     res[1] = 0.5 * m_TEThich - (x - 1.) / tan(m_theta);
   }
+  if (m_isRoundTrailing) {
+    res = roundTrailingEdge(res);
+  }
   return res;
 }
 
-std::vector<double> WedgeFoil::down(double x) {
+std::vector<double> WedgeFoil::Lower(double x) {
   double radius = 0.5 * m_LEDiameter;
   std::vector<double> res(2);
   res[0] = x;
@@ -357,10 +392,13 @@ std::vector<double> WedgeFoil::down(double x) {
   } else {
     res[1] = -0.5 * m_TEThich + (x - 1.) / tan(m_theta);
   }
+  if (m_isRoundTrailing) {
+    res = roundTrailingEdge(res);
+  }
   return res;
 }
 
-double WedgeFoil::findx(double s, int up) {
+double WedgeFoil::Findx(double s, int up) {
   double radius = 0.5 * m_LEDiameter;
   double x, sinter = radius * (M_PI - m_theta);
   if (s < sinter) {
@@ -371,7 +409,7 @@ double WedgeFoil::findx(double s, int up) {
   return x;
 }
 
-double WedgeFoil::finds(double x, int up) {
+double WedgeFoil::Finds(double x, int up) {
   double radius = 0.5 * m_LEDiameter;
   double s;
   if (x < m_LETangencyX) {
@@ -392,8 +430,8 @@ std::vector<double> WedgeFoil::roundTrailingEdge(std::vector<double> &p0,
   double xintercept = 1. - radius * (1 - cos(m_theta)), xcenter = 1. - radius;
   std::vector<double> res = p0;
   if (p0[0] > xintercept && p0[0] <= 1. + eps) {
-    bool onwall = fabs(up(p0[0])[1] - fabs(p0[1])) <= eps;
-    if (fabs(1. - p0[0]) < eps && fabs(p0[1]) <= up(1.)[1] + eps)
+    bool onwall = fabs(Upper(p0[0])[1] - fabs(p0[1])) <= eps;
+    if (fabs(1. - p0[0]) < eps && fabs(p0[1]) <= Upper(1.)[1] + eps)
       onwall = true;
     if (onwall) {
       double theta = atan(p0[1] / (p0[0] - xcenter));
@@ -408,11 +446,11 @@ double WedgeFoil::roundTrailingSize() {
   return 0.5 * m_TEThich / tan(0.5 * m_theta);
 }
 
-double WedgeFoil::Area(bool roundTrailingEdge) {
+double WedgeFoil::Area() {
   double rl = 0.5 * m_LEDiameter;
   double rt = roundTrailingSize();
   double res = (M_PI - m_theta) * rl * rl;
-  if (roundTrailingEdge) {
+  if (m_isRoundTrailing) {
     res += (rl + rt) * (1. - rl - rt) * sin(m_theta) + m_theta * rt * rt;
   } else {
     res +=
