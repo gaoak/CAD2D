@@ -1,19 +1,19 @@
 #ifndef BLAIRFOIL_H
 #define BLAIRFOIL_H
-#include "BLMeshModule.h"
+#include "BLFlatPlate.h"
 #include "LineEdge.h"
 #include "MeshRegions.h"
 #include "MeshTool.h"
+#include "airfoil.h"
 #include <memory>
 #include <vector>
 
-class BLAirfoil : public BLMeshModule {
+class BLAirfoil : public BLFlatPlate {
 public:
+  BLAirfoil() {}
   BLAirfoil(std::map<std::string, double> &doubleparams,
             std::map<std::string, int> &intparams);
-  int MeshGen(MeshRegions &combinedReg, std::vector<void *> &BLedge) override;
-  int DefineBCs(MeshRegions &combinedReg, int offset,
-                std::vector<void *> &BLedge) override;
+  void Initialise() override;
   std::vector<double> edge0(double s) override;
   std::vector<double> edge1(double s) override;
   std::vector<double> edge2(double s) override;
@@ -23,18 +23,14 @@ public:
   std::vector<double> edge6(double s) override;
   std::vector<double> edge7(double s) override;
   std::vector<double> edge8(double s) override;
-  double pts[20][2];
-  double virtualpts[20][2];
+  std::vector<double> edge9(double s) override;
+  std::vector<double> edge10(double s) override;
+  std::vector<double> edge11(double s) override;
 
-  LineEdge Cedge0;
-  LineEdge Cedge1;
-  LineEdge Cedge2;
-  LineEdge Cedge3;
-  LineEdge Cedge4;
-  LineEdge Cedge5;
-  LineEdge Cedge6;
-  LineEdge Cedge7;
-  LineEdge Cedge8;
+private:
+  AirFoilShPtr m_foil;
+  double m_LER;
+  double m_TER;
 };
 
 #endif

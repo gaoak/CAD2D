@@ -9,8 +9,10 @@
 
 class BLFlatPlate : public BLMeshModule {
 public:
+  BLFlatPlate() {}
   BLFlatPlate(std::map<std::string, double> &doubleparams,
               std::map<std::string, int> &intparams);
+  void Initialise() override;
   int MeshGen(MeshRegions &combinedReg, std::vector<void *> &BLedge) override;
   int DefineBCs(MeshRegions &combinedReg, int offset,
                 std::vector<void *> &BLedge) override;

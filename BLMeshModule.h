@@ -9,11 +9,13 @@ typedef std::shared_ptr<BLMeshModule> BLMeshModuleShPtr;
 
 class BLMeshModule {
 public:
+  BLMeshModule() {}
   BLMeshModule(std::map<std::string, double> &doubleparams,
                std::map<std::string, int> &intparams) {
     p = doubleparams;
     q = intparams;
   }
+  virtual void Initialise() {}
   virtual int MeshGen(MeshRegions &combinedReg, std::vector<void *> &BLedge) {
     return 0;
   }

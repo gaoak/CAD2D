@@ -5,7 +5,9 @@ using namespace std;
 
 BLFlatPlate::BLFlatPlate(std::map<std::string, double> &doubleparams,
                          std::map<std::string, int> &intparams)
-    : BLMeshModule(doubleparams, intparams) {
+    : BLMeshModule(doubleparams, intparams) {}
+
+void BLFlatPlate::Initialise() {
   // define other quantities
   setRadiusMesh(p["hFirstLayer"], p["progress"], p["maxLayerh"]);
   // airfoil
