@@ -44,17 +44,17 @@ void BLFlatPlate::Initialise() {
   Cedge45 = LineEdge(g_thetaA[4], g_thetaA[5], q["nUp5"], UNIFORM, 0., 0.);
   Cedge56 = LineEdge(g_thetaA[5], g_thetaA[6], q["nLow5"], UNIFORM, 0., 0.);
   Cedge01 = LineEdge(g_ptsA[0], g_ptsA[1], q["nUp1"], BOUNDARYLAYER0,
-                     p["hFirstLayer"], 1.6, 5, 0., 0., 0);
+                     p["hFirstLayer"], 1.2, 4, 0., 0., 0);
   Cedge12 = LineEdge(g_ptsA[1], g_ptsA[2], q["nUp2"], UNIFORM, 0., 0.);
   Cedge23 = LineEdge(g_ptsA[2], g_ptsA[3], q["nUp3"], UNIFORM, 0., 0.);
   Cedge34 = LineEdge(g_ptsA[3], g_ptsA[4], q["nUp4"], BOUNDARYLAYER1, 0., 0., 0,
-                     p["hFirstLayer"], 1.6, 5);
+                     p["hFirstLayer"], 1.2, 4);
   Cedge67 = LineEdge(g_ptsA[6], g_ptsA[7], q["nLow4"], BOUNDARYLAYER0,
-                     p["hFirstLayer"], 1.6, 5, 0., 0., 0);
+                     p["hFirstLayer"], 1.2, 4, 0., 0., 0);
   Cedge78 = LineEdge(g_ptsA[7], g_ptsA[8], q["nLow3"], UNIFORM, 0., 0.);
   Cedge89 = LineEdge(g_ptsA[8], g_ptsA[9], q["nLow2"], UNIFORM, 0., 0.);
   Cedge910 = LineEdge(g_ptsA[9], g_ptsA[10], q["nLow1"], BOUNDARYLAYER1, 0., 0.,
-                      0, p["hFirstLayer"], 1.6, 5);
+                      0, p["hFirstLayer"], 1.2, 4);
 }
 
 int BLFlatPlate::MeshGen(MeshRegions &combinedReg,
