@@ -126,3 +126,27 @@ std::vector<double> BLAirfoil::edge10(double s) {
 std::vector<double> BLAirfoil::edge11(double s) {
   return Transform(m_foil->Lower(Cedge910.Evaluate(s)[0]));
 }
+int BLAirfoil::DefineBCs(MeshRegions &combinedReg, int offset,
+                         std::vector<void *> &BLedge) {
+  int curvedpts = q["curvedpts"];
+  combinedReg.defineBoundary(BLedge[0], Cedge1011.m_N, 0 + offset, curvedpts);
+  combinedReg.defineBoundary(BLedge[1], Cedge110.m_N, 0 + offset, curvedpts);
+  combinedReg.defineBoundary(BLedge[2], Cedge45.m_N, 1 + offset, curvedpts);
+  combinedReg.defineBoundary(BLedge[3], Cedge56.m_N, 1 + offset, curvedpts);
+  int cpts2 = 2, cpts3 = 2;
+  if (q["NACAFOIL"]) {
+    cpts2 = curvedpts;
+    cpts3 = curvedpts;
+  } else if (q["WEDGEFOIL"] && q["CutFore"]) {
+    cpts3 = curvedpts;
+  }
+  combinedReg.defineBoundary(BLedge[4], Cedge01.m_N, 2 + offset, cpts3);
+  combinedReg.defineBoundary(BLedge[5], Cedge12.m_N, 2 + offset, cpts2);
+  combinedReg.defineBoundary(BLedge[6], Cedge23.m_N, 2 + offset, cpts2);
+  combinedReg.defineBoundary(BLedge[7], Cedge34.m_N, 2 + offset, cpts2);
+  combinedReg.defineBoundary(BLedge[8], Cedge67.m_N, 3 + offset, cpts2);
+  combinedReg.defineBoundary(BLedge[9], Cedge78.m_N, 3 + offset, cpts2);
+  combinedReg.defineBoundary(BLedge[10], Cedge89.m_N, 3 + offset, cpts2);
+  combinedReg.defineBoundary(BLedge[11], Cedge910.m_N, 3 + offset, cpts3);
+  return 4 + offset;
+}

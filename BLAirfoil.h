@@ -14,6 +14,8 @@ public:
   BLAirfoil(std::map<std::string, double> &doubleparams,
             std::map<std::string, int> &intparams);
   void Initialise() override;
+  int DefineBCs(MeshRegions &combinedReg, int offset,
+                std::vector<void *> &BLedge) override;
   std::vector<double> edge0(double s) override;
   std::vector<double> edge1(double s) override;
   std::vector<double> edge2(double s) override;
