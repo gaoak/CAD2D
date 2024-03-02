@@ -187,7 +187,8 @@ double LineEdge::DiscreteStretch(double s, double h0, double h1) {
   int ilower = floor(x);
   if (ilower == m_N)
     return 1.;
-  BuildDiscretes(h0, h1);
+  if (m_discretes.size() < m_N + 1)
+    BuildDiscretes(h0, h1);
   return (x - ilower) * (m_discretes[ilower + 1] - m_discretes[ilower]) +
          m_discretes[ilower];
 }
