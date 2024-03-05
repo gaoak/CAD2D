@@ -489,15 +489,17 @@ void MeshRegions::findAllBoundaryEdges() {
   }
 }
 
-int MeshRegions::omeshBoundaryMapping(std::string filename,
+int MeshRegions::omeshBoundaryMapping(std::map<int, int> &mapping,
+                                      std::vector<int> &unSharedPts,
+                                      std::string filename,
                                       std::vector<double> center,
                                       double radius) {
   extractBoundaryPoints();
   int j;
   // find outer edges
-  std::vector<int> unSharedPts;
   std::set<int> unSharedSet;
-  std::map<int, int> mapping;
+  unSharedPts.clear();
+  mapping.clear();
   for (int i = 0; i < m_unSharedPts.size(); ++i) {
     for (j = 0; j < m_unSharedPts[i].size(); ++j) {
       if (fabs(m_pts[m_unSharedPts[i][j]][0] - center[0]) +

@@ -26,8 +26,9 @@ public:
                       std::vector<std::vector<double>> breakpts,
                       std::vector<double> center, double radius);
   int RemapPts(void *mapFun);
-  int omeshBoundaryMapping(std::string filename, std::vector<double> center,
-                           double radius);
+  int omeshBoundaryMapping(std::map<int, int> &mapping,
+                           std::vector<int> &unSharedPts, std::string filename,
+                           std::vector<double> center, double radius);
 
 private:
   std::map<int, std::vector<int>> m_boundary;
