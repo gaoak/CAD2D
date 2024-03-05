@@ -119,6 +119,7 @@ int MeshRegion::loadFromMsh(std::string filename, double maxInnerAngle) {
   }
   ResetBndPts();
   FixMesh();
+  rebuildEdgesIndex();
   return 0;
 }
 
@@ -447,6 +448,45 @@ void MeshRegion::CheckMesh(double angle) {
             << m_edges.size() << "\n";
   std::cout << "Number of negative Jacobi elements " << negJac << "/"
             << m_cells.size() << "\n";
+}
+
+int MeshRegion::AddElement(std::vector<std::vector<double>> pts) {
+  // merge points
+  std::map<int, int> ptsMap;
+  for (unsigned int i = 0; i < pts.size(); ++i) {
+    int pId;
+    if (pointIsExist(pts[i], pId)) {
+      ptsMap[i] = pId;
+    } else {
+      m_pts.push_back(pts[i]);
+      ptsMap[i] = m_pts.size() - 1;
+      m_bndPts.insert(m_pts.size() - 1);
+    }
+  }
+  // merge edges
+  std::map<int, int> edgeMap;
+  for (unsigned int i = 0; i < pts.size(); ++i) {
+    std::vector<int> e;
+    e.push_back(ptsMap[i]);
+    e.push_back(ptsMap[(i + 1) % pts.size()]);
+    std::set<int> es;
+    es.insert(e[0]);
+    es.insert(e[1]);
+    if (m_edgesIndex.find(es) == m_edgesIndex.end()) {
+      m_edges.push_back(e);
+      edgeMap[i] = m_edges.size() - 1;
+      m_edgesIndex[es] = m_edges.size() - 1;
+    } else {
+      edgeMap[i] = m_edgesIndex[es];
+    }
+  }
+  // merge cells
+  std::vector<int> c;
+  for (int k = 0; k < pts.size(); ++k) {
+    c.push_back(edgeMap[k]);
+  }
+  m_cells.push_back(c);
+  return 0;
 }
 
 void MeshRegion::FixMesh() {

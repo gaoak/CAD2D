@@ -25,7 +25,7 @@ public:
   void sortCellFromQtoT();
   int loadFromMsh(std::string filename,
                   double maxInnerAngle = 2.35619449019234);
-  int addTriangle(std::vector<std::vector<double>> pts);
+  int AddElement(std::vector<std::vector<double>> pts);
   std::vector<std::vector<int>> extractBoundaryPoints();
   int pointIsExist(std::vector<double> p, int &pId);
   void rebuildEdgesIndex();
