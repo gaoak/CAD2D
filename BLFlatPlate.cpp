@@ -57,83 +57,57 @@ void BLFlatPlate::Initialise() {
                       0, p["hFirstLayer"], 1.2, 4);
 }
 
-int BLFlatPlate::MeshGen(MeshRegions &combinedReg,
-                         std::vector<void *> &BLedge) {
+int BLFlatPlate::MeshGenUpper(MeshRegions &combinedReg,
+                              std::vector<void *> &BLedge) {
   double hFirstLayer = p["hFirstLayer"];
   double progress = p["progress"];
   double maxLayerh = p["maxLayerh"];
-  int nLayersU0 = findNlayers(hFirstLayer, progress, p["upperBL0"], maxLayerh);
-  int nLayersU1 = findNlayers(hFirstLayer, progress, p["upperBL1"], maxLayerh);
   int nLayersU2 = findNlayers(hFirstLayer, progress, p["upperBL2"], maxLayerh);
   int nLayersU3 = findNlayers(hFirstLayer, progress, p["upperBL3"], maxLayerh);
-  int nLayersU4 = findNlayers(hFirstLayer, progress, p["upperBL4"], maxLayerh);
-  int nLayersU5 = findNlayers(hFirstLayer, progress, p["upperBL5"], maxLayerh);
-
-  int nLayersL0 = findNlayers(hFirstLayer, progress, p["lowerBL0"], maxLayerh);
-  int nLayersL1 = findNlayers(hFirstLayer, progress, p["lowerBL1"], maxLayerh);
-  int nLayersL2 = findNlayers(hFirstLayer, progress, p["lowerBL2"], maxLayerh);
-  int nLayersL3 = findNlayers(hFirstLayer, progress, p["lowerBL3"], maxLayerh);
-  int nLayersL4 = findNlayers(hFirstLayer, progress, p["lowerBL4"], maxLayerh);
-  int nLayersL5 = findNlayers(hFirstLayer, progress, p["lowerBL5"], maxLayerh);
   /////////near body region////////////////
   std::vector<RectRegion> Rects;
   // boundary layer region 0
   std::vector<void *> edges0;
   void *edgetmp;
-  // edge 11-0
-  edges0.push_back((void *)BLedge[1]);
+  // edge 1-2
+  edges0.push_back((void *)BLedge[5]);
   edges0.push_back((void *)radiusEdge);
   edges0.push_back(edgetmp);
   edges0.push_back(edgetmp);
-  Rects.push_back(RectRegion(edges0, "up0", false));
-  setRadiusLayers(nLayersU0);
-  Rects[Rects.size() - 1].MeshGen(Cedge110.m_N, nLayersU0, eBoundaryLayer1);
-  Rects[Rects.size() - 1].Tec360Pts("up0.dat");
-  // edge 01
-  edges0[0] = (void *)BLedge[4];
-  Rects.push_back(RectRegion(edges0, "up1", false));
-  setRadiusLayers(nLayersU1);
-  Rects[Rects.size() - 1].MeshGen(Cedge01.m_N, nLayersU1, eBoundaryLayer1);
-  Rects[Rects.size() - 1].Tec360Pts("up1.dat");
-  // edge 12
-  edges0[0] = (void *)BLedge[5];
   Rects.push_back(RectRegion(edges0, "up2", false));
   setRadiusLayers(nLayersU2);
   Rects[Rects.size() - 1].MeshGen(Cedge12.m_N, nLayersU2, eBoundaryLayer1);
   Rects[Rects.size() - 1].Tec360Pts("up2.dat");
-  // edge 23
+  // edge 2-3
   edges0[0] = (void *)BLedge[6];
   Rects.push_back(RectRegion(edges0, "up3", false));
   setRadiusLayers(nLayersU3);
   Rects[Rects.size() - 1].MeshGen(Cedge23.m_N, nLayersU3, eBoundaryLayer1);
   Rects[Rects.size() - 1].Tec360Pts("up3.dat");
-  // edge 34
-  edges0[0] = (void *)BLedge[7];
-  Rects.push_back(RectRegion(edges0, "up4", false));
-  setRadiusLayers(nLayersU4);
-  Rects[Rects.size() - 1].MeshGen(Cedge34.m_N, nLayersU4, eBoundaryLayer1);
-  Rects[Rects.size() - 1].Tec360Pts("up4.dat");
-  // edge 45
-  edges0[0] = (void *)BLedge[2];
-  Rects.push_back(RectRegion(edges0, "up5", false));
-  setRadiusLayers(nLayersU5);
-  Rects[Rects.size() - 1].MeshGen(Cedge45.m_N, nLayersU5, eBoundaryLayer1);
-  Rects[Rects.size() - 1].Tec360Pts("up5.dat");
 
-  // edge 5-6
-  edges0[0] = (void *)BLedge[3];
-  Rects.push_back(RectRegion(edges0, "low5", false));
-  setRadiusLayers(nLayersL5);
-  Rects[Rects.size() - 1].MeshGen(Cedge56.m_N, nLayersL5, eBoundaryLayer1);
-  Rects[Rects.size() - 1].Tec360Pts("low5.dat");
-  // edge 6-7
-  edges0[0] = (void *)BLedge[8];
-  Rects.push_back(RectRegion(edges0, "low4", false));
-  setRadiusLayers(nLayersL4);
-  Rects[Rects.size() - 1].MeshGen(Cedge67.m_N, nLayersL4, eBoundaryLayer1);
-  Rects[Rects.size() - 1].Tec360Pts("low4.dat");
+  ///////////// combine the near field mesh
+  for (unsigned int i = 0; i < Rects.size(); ++i) {
+    combinedReg.AddRegion(Rects[i]);
+  }
+  return 0;
+}
+int BLFlatPlate::MeshGenLower(MeshRegions &combinedReg,
+                              std::vector<void *> &BLedge) {
+  double hFirstLayer = p["hFirstLayer"];
+  double progress = p["progress"];
+  double maxLayerh = p["maxLayerh"];
+  int nLayersL2 = findNlayers(hFirstLayer, progress, p["lowerBL2"], maxLayerh);
+  int nLayersL3 = findNlayers(hFirstLayer, progress, p["lowerBL3"], maxLayerh);
+  /////////near body region////////////////
+  std::vector<RectRegion> Rects;
+  // boundary layer region 0
+  std::vector<void *> edges0;
+  void *edgetmp;
   // edge 7-8
-  edges0[0] = (void *)BLedge[9];
+  edges0.push_back((void *)BLedge[9]);
+  edges0.push_back((void *)radiusEdge);
+  edges0.push_back(edgetmp);
+  edges0.push_back(edgetmp);
   Rects.push_back(RectRegion(edges0, "low3", false));
   setRadiusLayers(nLayersL3);
   Rects[Rects.size() - 1].MeshGen(Cedge78.m_N, nLayersL3, eBoundaryLayer1);
@@ -144,23 +118,116 @@ int BLFlatPlate::MeshGen(MeshRegions &combinedReg,
   setRadiusLayers(nLayersL2);
   Rects[Rects.size() - 1].MeshGen(Cedge89.m_N, nLayersL2, eBoundaryLayer1);
   Rects[Rects.size() - 1].Tec360Pts("low2.dat");
-  // edge 9-10
-  edges0[0] = (void *)BLedge[11];
-  Rects.push_back(RectRegion(edges0, "low1", false));
-  setRadiusLayers(nLayersL1);
-  Rects[Rects.size() - 1].MeshGen(Cedge910.m_N, nLayersL1, eBoundaryLayer1);
-  Rects[Rects.size() - 1].Tec360Pts("low1.dat");
+
+  ///////////// combine the near field mesh
+  for (unsigned int i = 0; i < Rects.size(); ++i) {
+    combinedReg.AddRegion(Rects[i]);
+  }
+  return 0;
+}
+int BLFlatPlate::MeshGenLEdge(MeshRegions &combinedReg,
+                              std::vector<void *> &BLedge) {
+  double hFirstLayer = p["hFirstLayer"];
+  double progress = p["progress"];
+  double maxLayerh = p["maxLayerh"];
+  int nLayersU0 = findNlayers(hFirstLayer, progress, p["upperBL0"], maxLayerh);
+  int nLayersU1 = findNlayers(hFirstLayer, progress, p["upperBL1"], maxLayerh);
+  int nLayersL0 = findNlayers(hFirstLayer, progress, p["lowerBL0"], maxLayerh);
+  int nLayersL1 = findNlayers(hFirstLayer, progress, p["lowerBL1"], maxLayerh);
+  /////////near body region////////////////
+  std::vector<RectRegion> Rects;
+  // boundary layer region 0
+  std::vector<void *> edges0;
+  void *edgetmp;
+  // edge 0-1
+  edges0.push_back((void *)BLedge[4]);
+  edges0.push_back((void *)radiusEdge);
+  edges0.push_back(edgetmp);
+  edges0.push_back(edgetmp);
+  Rects.push_back(RectRegion(edges0, "up1", false));
+  setRadiusLayers(nLayersU1);
+  Rects[Rects.size() - 1].MeshGen(Cedge01.m_N, nLayersU1, eBoundaryLayer1);
+  Rects[Rects.size() - 1].Tec360Pts("up1.dat");
+  // edge 11-0
+  edges0[0] = (void *)BLedge[1];
+  Rects.push_back(RectRegion(edges0, "up0", false));
+  setRadiusLayers(nLayersU0);
+  Rects[Rects.size() - 1].MeshGen(Cedge110.m_N, nLayersU0, eBoundaryLayer1);
+  Rects[Rects.size() - 1].Tec360Pts("up0.dat");
   // edge 10-11
   edges0[0] = (void *)BLedge[0];
   Rects.push_back(RectRegion(edges0, "low0", false));
   setRadiusLayers(nLayersL0);
   Rects[Rects.size() - 1].MeshGen(Cedge1011.m_N, nLayersL0, eBoundaryLayer1);
   Rects[Rects.size() - 1].Tec360Pts("low0.dat");
+  // edge 9-10
+  edges0[0] = (void *)BLedge[11];
+  Rects.push_back(RectRegion(edges0, "low1", false));
+  setRadiusLayers(nLayersL1);
+  Rects[Rects.size() - 1].MeshGen(Cedge910.m_N, nLayersL1, eBoundaryLayer1);
+  Rects[Rects.size() - 1].Tec360Pts("low1.dat");
 
   ///////////// combine the near field mesh
   for (unsigned int i = 0; i < Rects.size(); ++i) {
     combinedReg.AddRegion(Rects[i]);
   }
+  return 0;
+}
+int BLFlatPlate::MeshGenTEdge(MeshRegions &combinedReg,
+                              std::vector<void *> &BLedge) {
+  double hFirstLayer = p["hFirstLayer"];
+  double progress = p["progress"];
+  double maxLayerh = p["maxLayerh"];
+  int nLayersU4 = findNlayers(hFirstLayer, progress, p["upperBL4"], maxLayerh);
+  int nLayersU5 = findNlayers(hFirstLayer, progress, p["upperBL5"], maxLayerh);
+  int nLayersL4 = findNlayers(hFirstLayer, progress, p["lowerBL4"], maxLayerh);
+  int nLayersL5 = findNlayers(hFirstLayer, progress, p["lowerBL5"], maxLayerh);
+  /////////near body region////////////////
+  std::vector<RectRegion> Rects;
+  // boundary layer region 0
+  std::vector<void *> edges0;
+  void *edgetmp;
+  // edge 6-7
+  edges0.push_back((void *)BLedge[8]);
+  edges0.push_back((void *)radiusEdge);
+  edges0.push_back(edgetmp);
+  edges0.push_back(edgetmp);
+  Rects.push_back(RectRegion(edges0, "low4", false));
+  setRadiusLayers(nLayersL4);
+  Rects[Rects.size() - 1].MeshGen(Cedge67.m_N, nLayersL4, eBoundaryLayer1);
+  Rects[Rects.size() - 1].Tec360Pts("low4.dat");
+  // edge 5-6
+  edges0[0] = (void *)BLedge[3];
+  Rects.push_back(RectRegion(edges0, "low5", false));
+  setRadiusLayers(nLayersL5);
+  Rects[Rects.size() - 1].MeshGen(Cedge56.m_N, nLayersL5, eBoundaryLayer1);
+  Rects[Rects.size() - 1].Tec360Pts("low5.dat");
+  // edge 4-5
+  edges0[0] = (void *)BLedge[2];
+  Rects.push_back(RectRegion(edges0, "up5", false));
+  setRadiusLayers(nLayersU5);
+  Rects[Rects.size() - 1].MeshGen(Cedge45.m_N, nLayersU5, eBoundaryLayer1);
+  Rects[Rects.size() - 1].Tec360Pts("up5.dat");
+  // edge 3-4
+  edges0[0] = (void *)BLedge[7];
+  Rects.push_back(RectRegion(edges0, "up4", false));
+  setRadiusLayers(nLayersU4);
+  Rects[Rects.size() - 1].MeshGen(Cedge34.m_N, nLayersU4, eBoundaryLayer1);
+  Rects[Rects.size() - 1].Tec360Pts("up4.dat");
+
+  ///////////// combine the near field mesh
+  for (unsigned int i = 0; i < Rects.size(); ++i) {
+    combinedReg.AddRegion(Rects[i]);
+  }
+  return 0;
+}
+
+int BLFlatPlate::MeshGen(MeshRegions &combinedReg,
+                         std::vector<void *> &BLedge) {
+  MeshGenLEdge(combinedReg, BLedge);
+  MeshGenUpper(combinedReg, BLedge);
+  MeshGenTEdge(combinedReg, BLedge);
+  MeshGenLower(combinedReg, BLedge);
   return 0;
 }
 

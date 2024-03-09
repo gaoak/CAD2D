@@ -23,6 +23,22 @@ public:
                         std::vector<void *> &BLedge) {
     return 0;
   }
+  virtual int MeshGenUpper(MeshRegions &combinedReg,
+                           std::vector<void *> &BLedge) {
+    return 0;
+  }
+  virtual int MeshGenLower(MeshRegions &combinedReg,
+                           std::vector<void *> &BLedge) {
+    return 0;
+  }
+  virtual int MeshGenLEdge(MeshRegions &combinedReg,
+                           std::vector<void *> &BLedge) {
+    return 0;
+  }
+  virtual int MeshGenTEdge(MeshRegions &combinedReg,
+                           std::vector<void *> &BLedge) {
+    return 0;
+  }
   virtual std::vector<double> edge0(double s) {
     return std::vector<double>(3, 0.);
   }

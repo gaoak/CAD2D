@@ -43,6 +43,15 @@ public:
   LineEdge Cedge78;
   LineEdge Cedge89;
   LineEdge Cedge910;
+
+  int MeshGenUpper(MeshRegions &combinedReg,
+                   std::vector<void *> &BLedge) override;
+  int MeshGenLower(MeshRegions &combinedReg,
+                   std::vector<void *> &BLedge) override;
+  int MeshGenLEdge(MeshRegions &combinedReg,
+                   std::vector<void *> &BLedge) override;
+  int MeshGenTEdge(MeshRegions &combinedReg,
+                   std::vector<void *> &BLedge) override;
 };
 
 #endif
