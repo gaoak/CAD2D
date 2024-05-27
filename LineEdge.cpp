@@ -1,7 +1,7 @@
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <vector>
-
 using namespace std;
 
 #include "LineEdge.h"
@@ -176,19 +176,74 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
     for (int i = m_nBLayers0 + 1; i < m_N - m_nBLayers1; ++i) {
       m_discretes[i] = m_discretes[i - 1] + ds;
     }
+  } else if (m_refineType == SMALLSTRETCH0) {
+    double L, ratio = ds1 / ds0;
+    if (ds0 == ds1) {
+      L = ds0;
+    } else {
+      L = ds1 + (ds0 - ds1) / (1. - m_q0);
+    }
+    int Nu = (2. - L) / ds1;
+    if (Nu < 0) {
+      std::cout << "error: unable to build a SMALLSTRETCH0 grid " << L
+                << " > 2." << std::endl;
+    }
+    L = 2. - Nu * ds1;
+    m_q0 = (L - ds0) / (L - ds1);
+    double stmp = -1.;
+    m_discretes.clear();
+    double dstmp = ds0;
+    while (dstmp <= (1. + 3.e-3) * ds1) {
+      m_discretes.push_back(stmp);
+      stmp += dstmp;
+      dstmp *= m_q0;
+    }
+    for (int i = Nu; i >= 0; --i) {
+      stmp = 1. - ds1 * i;
+      m_discretes.push_back(stmp);
+    }
+    m_N = m_discretes.size() - 1;
+  } else if (m_refineType == SMALLSTRETCH1) {
+    double L, ratio = ds0 / ds1;
+    if (ds0 == ds1) {
+      L = ds1;
+    } else {
+      L = ds0 + (ds1 - ds0) / (1. - m_q1);
+    }
+    int Nu = (2. - L) / ds0;
+    if (Nu < 0) {
+      std::cout << "error: unable to build a SMALLSTRETCH1 grid " << L
+                << " > 2." << std::endl;
+    }
+    L = 2. - Nu * ds0;
+    m_q1 = (L - ds1) / (L - ds0);
+    double stmp = 1.;
+    m_discretes.clear();
+    double dstmp = ds1;
+    while (dstmp <= (1. + 3.e-3) * ds0) {
+      m_discretes.push_back(stmp);
+      stmp -= dstmp;
+      dstmp *= m_q1;
+    }
+    for (int i = Nu; i >= 0; --i) {
+      stmp = -1. + ds0 * i;
+      m_discretes.push_back(stmp);
+    }
+    std::reverse(m_discretes.begin(), m_discretes.end());
+    m_N = m_discretes.size() - 1;
   }
   return 0.;
 }
 
 double LineEdge::DiscreteStretch(double s, double h0, double h1) {
+  if (m_discretes.size() < m_N + 1)
+    BuildDiscretes(h0, h1);
   double x = (s + 1.) / 2. * m_N;
   if (x < 0.)
     x = 0.;
   int ilower = floor(x);
   if (ilower == m_N)
     return 1.;
-  if (m_discretes.size() < m_N + 1)
-    BuildDiscretes(h0, h1);
   return (x - ilower) * (m_discretes[ilower + 1] - m_discretes[ilower]) +
          m_discretes[ilower];
 }
@@ -232,7 +287,8 @@ std::vector<double> LineEdge::Evaluate(double s) {
     s = QuadStretch1(s, m_g1);
   }
   if (m_refineType == BOUNDARYLAYER0 || m_refineType == BOUNDARYLAYER1 ||
-      m_refineType == BOUNDARYLAYER2 || m_refineType == BOUNDARYLAYER4) {
+      m_refineType == BOUNDARYLAYER2 || m_refineType == BOUNDARYLAYER4 ||
+      m_refineType == SMALLSTRETCH0 || m_refineType == SMALLSTRETCH1) {
     s = DiscreteStretch(s, m_g0 * 2., m_g1 * 2.);
   }
   for (int i = 0; i < 2; ++i) {
@@ -262,6 +318,41 @@ LineEdge::LineEdge(double *p0, double *p1, int N, int refineType, double h0,
   m_nBLayers0 = NBlayers0;
   m_nBLayers1 = NBlayers1;
 }
+
+LineEdge::LineEdge(double *p0, double *p1, int refineType, double h0, double h1,
+                   double q) {
+  m_p0 = p0;
+  m_p1 = p1;
+  m_refineType = refineType;
+  if (refineType == SMALLSTRETCH0 && h0 > h1 ||
+      refineType == SMALLSTRETCH1 && h0 < h1 || q < 1.) {
+    std::cout
+        << "error: incorrect definition for SMALLSTRETCH0 or SMALLSTRETCH1, "
+        << h0 << ", " << h1 << std::endl;
+    exit(-1);
+  }
+  m_h0 = h0;
+  m_h1 = h1;
+  m_q0 = q;
+  m_q1 = q;
+  Evaluate(0.);
+}
+
+// int main()
+// {
+//     double pts[2][2];
+//     pts[0][0] = -5.;
+//     pts[0][1] = 0.;
+//     pts[1][0] = -1.;
+//     pts[1][1] = 0.;
+//     LineEdge Cedge2(pts[0], pts[1], SMALLSTRETCH1, 0.05, 0.01, 1.05);
+//     double ds = 2./Cedge2.m_N;
+//     for(int i=0; i<=Cedge2.m_N; ++i) {
+//         printf("%lf %lf\n", Cedge2.Evaluate(ds*i-1.)[0],
+//         Cedge2.Evaluate(ds*i-1.)[1]);
+//     }
+//     printf("\n");
+// }
 
 // int main()
 // {

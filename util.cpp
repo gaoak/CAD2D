@@ -58,9 +58,13 @@ void OutGeo(std::string filename, std::vector<std::vector<double>> outerbox,
   if (outerbox.size() >= 3) {
     int indexs = index;
     for (j = 0; j < outerbox.size(); ++j) {
+      double zcoord = 0.;
+      if (outerbox[j].size() > 2) {
+        zcoord = outerbox[j][2];
+      }
       outgmsh << std::scientific << std::setprecision(17);
       outgmsh << "Point(" << index << ") = {" << std::setw(26) << outerbox[j][0]
-              << ", " << outerbox[j][1] << ", 0};\n";
+              << ", " << outerbox[j][1] << ", " << zcoord << "};\n";
       std::vector<int> l;
       l.push_back(index);
       if (j < outerbox.size() - 1) {

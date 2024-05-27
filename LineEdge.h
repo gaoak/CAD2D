@@ -15,6 +15,8 @@
 #define BOUNDARYLAYER1 8
 #define BOUNDARYLAYER2 9
 #define BOUNDARYLAYER4 10
+#define SMALLSTRETCH0 11
+#define SMALLSTRETCH1 12
 
 class LineEdge {
 public:
@@ -22,6 +24,8 @@ public:
   LineEdge(double *p0, double *p1, int N, int refineType, double h0, double h1);
   LineEdge(double *p0, double *p1, int N, int refineType, double h0, double q0,
            int NBlayers0, double h1, double q1, int NBlayers1);
+  LineEdge(double *p0, double *p1, int refineType, double h0, double h1,
+           double q);
   std::vector<double> Evaluate(double s);
   int m_N;
 
