@@ -25,4 +25,5 @@ int FindRelationByBoundBox(
     std::vector<double> &box0,
     std::vector<double>
         &box1); // 1, 0 contains 1; -1, 1 contains 0; 0 overlap; 2, no contact.
+void parserDouble(const char *cstr, std::vector<double> &value);
 #endif

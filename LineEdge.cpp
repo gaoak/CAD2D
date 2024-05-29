@@ -177,56 +177,48 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
       m_discretes[i] = m_discretes[i - 1] + ds;
     }
   } else if (m_refineType == SMALLSTRETCH0) {
-    double L, ratio = ds1 / ds0;
-    if (ds0 == ds1) {
-      L = ds0;
-    } else {
-      L = ds1 + (ds0 - ds1) / (1. - m_q0);
-    }
-    int Nu = (2. - L) / ds1;
-    if (Nu < 0) {
-      std::cout << "error: unable to build a SMALLSTRETCH0 grid " << L
-                << " > 2." << std::endl;
-    }
-    L = 2. - Nu * ds1;
-    m_q0 = (L - ds0) / (L - ds1);
-    double stmp = -1.;
+    int Nu = 0;
     m_discretes.clear();
+    double stmp = -1.;
+    m_discretes.push_back(stmp);
     double dstmp = ds0;
-    while (dstmp <= (1. + 3.e-3) * ds1) {
-      m_discretes.push_back(stmp);
-      stmp += dstmp;
-      dstmp *= m_q0;
+    while (true) {
+      Nu = (1. - stmp) / ds1 + 0.5;
+      double dux = (1. - stmp) / Nu;
+      if (dstmp < dux) {
+        stmp += dstmp;
+        m_discretes.push_back(stmp);
+        dstmp *= m_q0;
+      } else {
+        break;
+      }
     }
-    for (int i = Nu; i >= 0; --i) {
-      stmp = 1. - ds1 * i;
+    double dux = (1. - stmp) / Nu;
+    for (int i = Nu - 1; i >= 0; --i) {
+      stmp = 1. - dux * i;
       m_discretes.push_back(stmp);
     }
     m_N = m_discretes.size() - 1;
   } else if (m_refineType == SMALLSTRETCH1) {
-    double L, ratio = ds0 / ds1;
-    if (ds0 == ds1) {
-      L = ds1;
-    } else {
-      L = ds0 + (ds1 - ds0) / (1. - m_q1);
-    }
-    int Nu = (2. - L) / ds0;
-    if (Nu < 0) {
-      std::cout << "error: unable to build a SMALLSTRETCH1 grid " << L
-                << " > 2." << std::endl;
-    }
-    L = 2. - Nu * ds0;
-    m_q1 = (L - ds1) / (L - ds0);
-    double stmp = 1.;
+    int Nu = 0;
     m_discretes.clear();
+    double stmp = 1.;
+    m_discretes.push_back(stmp);
     double dstmp = ds1;
-    while (dstmp <= (1. + 3.e-3) * ds0) {
-      m_discretes.push_back(stmp);
-      stmp -= dstmp;
-      dstmp *= m_q1;
+    while (true) {
+      Nu = (1. + stmp) / ds0 + 0.5;
+      double dux = (1. + stmp) / Nu;
+      if (dstmp < dux) {
+        stmp -= dstmp;
+        m_discretes.push_back(stmp);
+        dstmp *= m_q1;
+      } else {
+        break;
+      }
     }
-    for (int i = Nu; i >= 0; --i) {
-      stmp = -1. + ds0 * i;
+    double dux = (1. + stmp) / Nu;
+    for (int i = Nu - 1; i >= 0; --i) {
+      stmp = -1. + dux * i;
       m_discretes.push_back(stmp);
     }
     std::reverse(m_discretes.begin(), m_discretes.end());
