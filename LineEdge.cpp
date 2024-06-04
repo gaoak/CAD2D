@@ -194,6 +194,13 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
       }
     }
     double dux = (1. - stmp) / Nu;
+    double tmpratio = dux / ds1;
+    if (tmpratio < 1.) {
+      tmpratio = 1. / tmpratio;
+    }
+    std::cout << "Segment [" << m_p0[0] << ", " << m_p1[0] << "](" << m_q1
+              << "), right end " << ds1 << "->" << dux << "[" << tmpratio << "]"
+              << std::endl;
     for (int i = Nu - 1; i >= 0; --i) {
       stmp = 1. - dux * i;
       m_discretes.push_back(stmp);
@@ -217,6 +224,13 @@ double LineEdge::BuildDiscretes(double ds0, double ds1) {
       }
     }
     double dux = (1. + stmp) / Nu;
+    double tmpratio = dux / ds0;
+    if (tmpratio < 1.) {
+      tmpratio = 1. / tmpratio;
+    }
+    std::cout << "Segment [" << m_p0[0] << ", " << m_p1[0] << "](" << m_q1
+              << "), left end " << ds0 << "->" << dux << "[" << tmpratio << "]"
+              << std::endl;
     for (int i = Nu - 1; i >= 0; --i) {
       stmp = -1. + dux * i;
       m_discretes.push_back(stmp);
