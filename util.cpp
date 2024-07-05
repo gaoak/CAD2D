@@ -41,8 +41,11 @@ void OutGeo(std::string filename, std::vector<std::vector<double>> outerbox,
     int indexs = index;
     for (j = 0; j < innerbnd[i].size(); ++j) {
       outgmsh << std::scientific << std::setprecision(17);
-      outgmsh << "Point(" << index << ") = {" << std::setw(26)
-              << innerbnd[i][j][0] << ", " << innerbnd[i][j][1] << ", 0};\n";
+      std::vector<double> datum = innerbnd[i][j];
+      datum.resize(4, 0.);
+      outgmsh << "Point(" << index << ") = {" << std::setw(26) << datum[0]
+              << ", " << datum[1] << ", " << datum[2] << ", " << datum[3]
+              << "};\n";
       std::vector<int> l;
       l.push_back(index);
       if (j < innerbnd[i].size() - 1) {
@@ -58,13 +61,12 @@ void OutGeo(std::string filename, std::vector<std::vector<double>> outerbox,
   if (outerbox.size() >= 3) {
     int indexs = index;
     for (j = 0; j < outerbox.size(); ++j) {
-      double zcoord = 0.;
-      if (outerbox[j].size() > 2) {
-        zcoord = outerbox[j][2];
-      }
+      std::vector<double> datum = outerbox[j];
+      datum.resize(4, 0.);
       outgmsh << std::scientific << std::setprecision(17);
-      outgmsh << "Point(" << index << ") = {" << std::setw(26) << outerbox[j][0]
-              << ", " << outerbox[j][1] << ", " << zcoord << "};\n";
+      outgmsh << "Point(" << index << ") = {" << std::setw(26) << datum[0]
+              << ", " << datum[1] << ", " << datum[2] << ", " << datum[3]
+              << "};\n";
       std::vector<int> l;
       l.push_back(index);
       if (j < outerbox.size() - 1) {
