@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "tinyxml2.h"
 #define TRIGELEMENT 2
 #define QUADELEMENT 3
 #define LINEBUFFERSIZE 1000
@@ -25,6 +26,7 @@ public:
   void sortCellFromQtoT();
   int loadFromMsh(std::string filename,
                   double maxInnerAngle = 2.35619449019234);
+  int loadFromXml(std::string filename, std::string bodytype);
   int AddElement(std::vector<std::vector<double>> pts);
   std::vector<std::vector<int>> extractBoundaryPoints();
   int pointIsExist(std::vector<double> p, int &pId);
@@ -47,6 +49,9 @@ public:
   std::vector<std::vector<int>> splitBoundaryPts(double angle);
 
 private:
+  void XmlLoadModifyPts(tinyxml2::XMLDocument &doc, std::string bodytype, std::map<int, int> &ptsmap);
+  void XmlLoadEdge(tinyxml2::XMLDocument &doc, std::map<int, int> &ptsmap, std::map<int, int> &edgemap);
+  void XmlLoadElement(tinyxml2::XMLDocument &doc, std::map<int, int> &edgemap);
   int loadNode(std::ifstream &inxml, int N, char buffer[]);
   int loadElements(std::ifstream &inxml, int N, char buffer[],
                    std::set<int> types, double maxInnerAngle);

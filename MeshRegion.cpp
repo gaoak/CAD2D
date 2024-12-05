@@ -1,4 +1,5 @@
 #include "MeshRegion.h"
+#include "util.h"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -82,6 +83,80 @@ std::vector<double> MeshRegion::intersection(std::vector<double> l0,
   return res;
 }
 
+int MeshRegion::loadFromXml(std::string filename, std::string bodytype) {
+  std::map<int, int> ptsmap, edgemap;
+  tinyxml2::XMLDocument doc;
+  doc.LoadFile(filename.c_str());
+  XmlLoadModifyPts(doc, bodytype, ptsmap);
+  XmlLoadEdge(doc, ptsmap, edgemap);
+  XmlLoadElement(doc, edgemap);
+  // rebuild mesh
+  ResetBndPts();
+  FixMesh();
+  rebuildEdgesIndex();
+  return 0;
+}
+
+void MeshRegion::XmlLoadModifyPts(tinyxml2::XMLDocument &doc, std::string bodytype, std::map<int, int> &ptsmap) {
+  tinyxml2::XMLElement *ptsEle = doc.FirstChildElement("NEKTAR")
+                           ->FirstChildElement("GEOMETRY")
+                           ->FirstChildElement("VERTEX")
+                           ->FirstChildElement();
+  while (ptsEle != nullptr) {
+    int id = ptsEle->IntAttribute("ID");
+    const char *pstr = ptsEle->GetText();
+    std::vector<double> p;
+    ptsmap[id] = m_pts.size();
+    parserDouble(pstr, p);
+    p[2] = 0.;
+    m_pts.push_back(p);
+    ptsEle = ptsEle->NextSiblingElement();
+    if (ptsEle == nullptr)
+      std::cout << "read pts " << m_pts.size() << std::endl;
+  }
+}
+
+void MeshRegion::XmlLoadEdge(tinyxml2::XMLDocument &doc, std::map<int, int> &ptsmap, std::map<int, int> &edgemap) {
+  tinyxml2::XMLElement *edgeEle = doc.FirstChildElement("NEKTAR")
+                            ->FirstChildElement("GEOMETRY")
+                            ->FirstChildElement("EDGE")
+                            ->FirstChildElement();
+  while (edgeEle != nullptr) {
+    int id = edgeEle->IntAttribute("ID");
+    const char *estr = edgeEle->GetText();
+    std::vector<int> e;
+    parserUInt(estr, e);
+    edgemap[id] = m_edges.size();
+    for(size_t i=0; i<e.size();++i) {
+      e[i] = ptsmap[e[i]];
+    }
+    m_edges.push_back(e);
+    edgeEle = edgeEle->NextSiblingElement();
+    if (edgeEle == nullptr)
+      std::cout << "read edge " << m_edges.size() << std::endl;
+  }
+}
+
+void MeshRegion::XmlLoadElement(tinyxml2::XMLDocument &doc, std::map<int, int> &edgemap) {
+  tinyxml2::XMLElement *faceEle = doc.FirstChildElement("NEKTAR")
+                            ->FirstChildElement("GEOMETRY")
+                            ->FirstChildElement("ELEMENT")
+                            ->FirstChildElement();
+  while (faceEle != nullptr) {
+    int id = faceEle->IntAttribute("ID");
+    const char *fstr = faceEle->GetText();
+    std::vector<int> f;
+    parserUInt(fstr, f);
+    for(size_t i=0; i<f.size();++i) {
+      f[i] = edgemap[f[i]];
+    }
+    m_cells.push_back(f);
+    faceEle = faceEle->NextSiblingElement();
+    if (faceEle == nullptr)
+      std::cout << "read face " << m_cells.size() << std::endl;
+  }
+}
+
 int MeshRegion::loadFromMsh(std::string filename, double maxInnerAngle) {
   std::ifstream inxml(filename.c_str());
   if (!inxml.is_open())
@@ -148,6 +223,7 @@ int MeshRegion::loadNode(std::ifstream &inxml, int N, char buffer[]) {
   }
   return 0;
 }
+
 int MeshRegion::loadElements(std::ifstream &inxml, int N, char buffer[],
                              std::set<int> types, double maxInnerAngle) {
   for (int i = 0; i < N; ++i) {
