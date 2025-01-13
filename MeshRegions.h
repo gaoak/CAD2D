@@ -29,6 +29,7 @@ public:
   int omeshBoundaryMapping(std::map<int, int> &mapping,
                            std::vector<int> &unSharedPts, std::string filename,
                            std::vector<double> center, double radius);
+  int defineCurvedBoundary(int bid, void *edgeFun);
 
 private:
   std::map<int, std::vector<int>> m_boundary;

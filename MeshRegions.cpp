@@ -467,6 +467,31 @@ int MeshRegions::defineBoundary(std::map<int, void *> edgeFuns, double angle) {
   return 0;
 }
 
+int MeshRegions::defineCurvedBoundary(int bid, void *edgeFun) {
+  if (m_boundary.find(bid) == m_boundary.end()) {
+    std::cout << "error boundary (" << bid << ") not found." << std::endl;
+  }
+  std::vector<std::vector<double>> (*edgeFunction)(std::vector<double>&, std::vector<double>&) = (std::vector<std::vector<double>>(*)(std::vector<double>&, std::vector<double>&)) edgeFun;
+  for(auto eId: m_boundary[bid]) {
+    std::vector<double> p0 = m_pts[m_edges[eId][0]];
+    std::vector<double> p1 = m_pts[m_edges[eId][1]];
+    std::vector<std::vector<double>> ps = edgeFunction(p0, p1);
+    m_pts[m_edges[eId][0]] = p0;
+    m_pts[m_edges[eId][1]] = p1;
+    if(ps.size()>2) {
+      m_curvedEdges.push_back(eId);
+      std::vector<double> points;
+      for(auto p : ps) {
+        points.push_back(p[0]);
+        points.push_back(p[1]);
+        points.push_back(0.);
+      }
+      m_curvedPoints.push_back(points);
+    }
+  }
+  return 0;
+}
+
 /***
  * Find all boundary edges and store them in a set m_allBoundaryEdges
  ***/
