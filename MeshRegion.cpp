@@ -97,11 +97,13 @@ int MeshRegion::loadFromXml(std::string filename, std::string bodytype) {
   return 0;
 }
 
-void MeshRegion::XmlLoadModifyPts(tinyxml2::XMLDocument &doc, std::string bodytype, std::map<int, int> &ptsmap) {
+void MeshRegion::XmlLoadModifyPts(tinyxml2::XMLDocument &doc,
+                                  std::string bodytype,
+                                  std::map<int, int> &ptsmap) {
   tinyxml2::XMLElement *ptsEle = doc.FirstChildElement("NEKTAR")
-                           ->FirstChildElement("GEOMETRY")
-                           ->FirstChildElement("VERTEX")
-                           ->FirstChildElement();
+                                     ->FirstChildElement("GEOMETRY")
+                                     ->FirstChildElement("VERTEX")
+                                     ->FirstChildElement();
   while (ptsEle != nullptr) {
     int id = ptsEle->IntAttribute("ID");
     const char *pstr = ptsEle->GetText();
@@ -116,18 +118,20 @@ void MeshRegion::XmlLoadModifyPts(tinyxml2::XMLDocument &doc, std::string bodyty
   }
 }
 
-void MeshRegion::XmlLoadEdge(tinyxml2::XMLDocument &doc, std::map<int, int> &ptsmap, std::map<int, int> &edgemap) {
+void MeshRegion::XmlLoadEdge(tinyxml2::XMLDocument &doc,
+                             std::map<int, int> &ptsmap,
+                             std::map<int, int> &edgemap) {
   tinyxml2::XMLElement *edgeEle = doc.FirstChildElement("NEKTAR")
-                            ->FirstChildElement("GEOMETRY")
-                            ->FirstChildElement("EDGE")
-                            ->FirstChildElement();
+                                      ->FirstChildElement("GEOMETRY")
+                                      ->FirstChildElement("EDGE")
+                                      ->FirstChildElement();
   while (edgeEle != nullptr) {
     int id = edgeEle->IntAttribute("ID");
     const char *estr = edgeEle->GetText();
     std::vector<int> e;
     parserUInt(estr, e);
     edgemap[id] = m_edges.size();
-    for(size_t i=0; i<e.size();++i) {
+    for (size_t i = 0; i < e.size(); ++i) {
       e[i] = ptsmap[e[i]];
     }
     m_edges.push_back(e);
@@ -137,17 +141,18 @@ void MeshRegion::XmlLoadEdge(tinyxml2::XMLDocument &doc, std::map<int, int> &pts
   }
 }
 
-void MeshRegion::XmlLoadElement(tinyxml2::XMLDocument &doc, std::map<int, int> &edgemap) {
+void MeshRegion::XmlLoadElement(tinyxml2::XMLDocument &doc,
+                                std::map<int, int> &edgemap) {
   tinyxml2::XMLElement *faceEle = doc.FirstChildElement("NEKTAR")
-                            ->FirstChildElement("GEOMETRY")
-                            ->FirstChildElement("ELEMENT")
-                            ->FirstChildElement();
+                                      ->FirstChildElement("GEOMETRY")
+                                      ->FirstChildElement("ELEMENT")
+                                      ->FirstChildElement();
   while (faceEle != nullptr) {
     int id = faceEle->IntAttribute("ID");
     const char *fstr = faceEle->GetText();
     std::vector<int> f;
     parserUInt(fstr, f);
-    for(size_t i=0; i<f.size();++i) {
+    for (size_t i = 0; i < f.size(); ++i) {
       f[i] = edgemap[f[i]];
     }
     m_cells.push_back(f);
@@ -569,7 +574,13 @@ void MeshRegion::FixMesh() {
   for (size_t i = 0; i < m_cells.size(); ++i) {
     double jac = ElementArea(i);
     if (jac <= 0.) {
-      std::reverse(m_cells[i].begin(), m_cells[i].end());
+      if (m_cells[i].size() == 4)
+        std::reverse(m_cells[i].begin(), m_cells[i].end());
+      else if (m_cells[i].size() == 3) {
+        int tmp = m_cells[i][1];
+        m_cells[i][1] = m_cells[i][0];
+        m_cells[i][0] = tmp;
+      }
     }
   }
 }
