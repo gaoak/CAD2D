@@ -31,6 +31,7 @@ protected:
   void InitAirfoil();
   double Findx(double s, std::vector<std::vector<double>> &arc);
   double Finds(double x, std::vector<std::vector<double>> &arc);
+  double halfSxt(double x);
   double halfSt(double x);
   double halft(double x);
   double halfdt(double x);
@@ -43,6 +44,7 @@ protected:
                                         double eps = 1.E-8);
   double roundTrailingSize();
   double Area();
+  double AreaMoment();
   std::vector<std::vector<double>> m_arcu;
   std::vector<std::vector<double>> m_arcd;
   double m_m;

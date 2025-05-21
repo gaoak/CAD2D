@@ -51,8 +51,9 @@ NACAmpxx::NACAmpxx(std::string name) {
 void NACAmpxx::InitAirfoil() {
   m_TERadius = calculateTrailingRadius(m_TETangencyX);
   calculateArcTable();
-  printf("NACA airfoil with Area (round trailing edge %d) %26.18f\n",
-         m_isRoundTrailing, Area());
+  printf("NACA airfoil with Area and AreaMomentx (round trailing edge %d) "
+         "%26.18f, %26.18f\n",
+         m_isRoundTrailing, Area(), AreaMoment());
 }
 
 double NACAmpxx::Findx(double s, int surf) {
@@ -114,6 +115,17 @@ double NACAmpxx::halfSt(double x) {
          x;
 }
 
+double NACAmpxx::halfSxt(double x) {
+  x = fabs(x);
+  std::vector<double> xs(5, 1.);
+  for (int i = 1; i < 5; ++i)
+    xs[i] = xs[i - 1] * x;
+  return 5. * m_t *
+         (0.2969 * sqrt(x) * 2. / 5. - 0.1260 * xs[1] / 3. -
+          0.3516 * xs[2] / 4. + 0.2843 * xs[3] / 5. - 0.1015 * xs[4] / 6.) *
+         xs[2];
+}
+
 double NACAmpxx::halfdt(double x) {
   x = fabs(x);
   std::vector<double> xs(5, 1.);
@@ -137,6 +149,7 @@ void NACAmpxx::GetInfo(std::map<std::string, double> &p) {
   }
   p["Thickness"] = m_t;
   p["Area"] = Area();
+  p["Areax"] = AreaMoment();
 }
 
 /***
@@ -327,9 +340,24 @@ double NACAmpxx::Area() {
     double xinterc;
     double rt = calculateTrailingRadius(xinterc);
     double theta = acos((rt - 1. + xinterc) / rt);
-    res = halfSt(xinterc) * 2. + rt * rt * theta;
+    res = halfSt(xinterc) * 2. + rt * rt * (theta - cos(theta) * sin(theta));
   } else {
     res = halfSt(1.) * 2.;
+  }
+  return res;
+}
+
+double NACAmpxx::AreaMoment() {
+  double res = 0.;
+  if (m_isRoundTrailing) {
+    double xinterc;
+    double rt = calculateTrailingRadius(xinterc);
+    double theta = acos((rt - 1. + xinterc) / rt);
+    res = halfSxt(xinterc) * 2. +
+          rt * rt * (1. - rt) * (theta - cos(theta) * sin(theta)) +
+          2. / 3. * pow(rt * sin(theta), 3);
+  } else {
+    res = halfSxt(1.) * 2.;
   }
   return res;
 }
